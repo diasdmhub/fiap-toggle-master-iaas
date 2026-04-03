@@ -9,18 +9,20 @@ data "aws_availability_zones" "available" {
 locals {
   vpc_cidr = "${var.subnet_prefix}.0.0/16"
 
-  # List of AZs
-  azs = data.aws_availability_zones.available.names
+  # List of AZs limited to 4 for control-plane support
+  azs         = data.aws_availability_zones.available.names
+  cp_az_count = min([length(local.azs), 4])
+  cp_azs      = slice(local.azs, 0, local.cp_az_count)
 
   # Public subnet CIDRs (non-overlapping third octet)
   public_subnet_cidrs = [
-    for i in range(length(local.azs)) :
+    for i in range(local.cp_az_count) :
     "${var.subnet_prefix}.${var.public_subnet_nums[i]}.0/24"
   ]
 
   # Private subnet CIDRs
   private_subnet_cidrs = [
-    for i in range(length(local.azs)) :
+    for i in range(local.cp_az_count) :
     "${var.subnet_prefix}.${var.private_subnet_nums[i]}.0/24"
   ]
 }
@@ -38,31 +40,31 @@ resource "aws_vpc" "main" {
 
 # Public subnets (one per AZ) with auto-assign public IP
 resource "aws_subnet" "public" {
-  count                   = length(local.azs)
+  count                   = length(local.cp_azs)
   vpc_id                  = aws_vpc.main.id
   cidr_block              = local.public_subnet_cidrs[count.index]
-  availability_zone       = local.azs[count.index]
+  availability_zone       = local.cp_azs[count.index]
   map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.vpc_name}-subnet-pub-${var.public_subnet_nums[count.index]}"
     Tier = "public"
-    AZ   = local.azs[count.index]
+    AZ   = local.cp_azs[count.index]
   }
 }
 
 # Private subnets (one per AZ) with no auto-assign public IP
 resource "aws_subnet" "private" {
-  count                   = length(local.azs)
+  count                   = length(local.cp_azs)
   vpc_id                  = aws_vpc.main.id
   cidr_block              = local.private_subnet_cidrs[count.index]
-  availability_zone       = local.azs[count.index]
+  availability_zone       = local.cp_azs[count.index]
   map_public_ip_on_launch = false
 
   tags = {
     Name = "${var.vpc_name}-subnet-priv-${var.private_subnet_nums[count.index]}"
     Tier = "private"
-    AZ   = local.azs[count.index]
+    AZ   = local.cp_azs[count.index]
   }
 }
 
@@ -111,14 +113,14 @@ resource "aws_route" "public_internet_access" {
 
 # Associate public subnets with public route table
 resource "aws_route_table_association" "public" {
-  count          = length(local.azs)
+  count          = length(local.cp_azs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
 # Associate private subnets with private route table
 resource "aws_route_table_association" "private" {
-  count          = length(local.azs)
+  count          = length(local.cp_azs)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
