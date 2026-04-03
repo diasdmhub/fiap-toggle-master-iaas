@@ -1,7 +1,7 @@
 variable "vpc_name" {
   description = "Name prefix for the VPC and related resources - matches TAG_PREFIX"
   type        = string
-  default     = "env-vpc"
+  default     = "fiap-toggle"
 }
 
 variable "subnet_prefix" {

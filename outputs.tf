@@ -47,3 +47,11 @@ output "private_subnet_cidrs" {
   description = "CIDR blocks of the private subnets"
   value       = local.private_subnet_cidrs
 }
+
+output "eks_cluster_endpoint" {
+  value = aws_eks_cluster.main.endpoint
+}
+
+output "eks_cluster_name" {
+  value = aws_eks_cluster.main.name
+}
