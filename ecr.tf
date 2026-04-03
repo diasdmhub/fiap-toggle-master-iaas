@@ -1,3 +1,4 @@
+# Criar repositórios ECR
 resource "aws_ecr_repository" "service" {
   for_each = var.service_list
 
