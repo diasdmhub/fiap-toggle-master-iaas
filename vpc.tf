@@ -34,7 +34,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = var.vpc_name
+    Name = "${var.name_prefix}-vpc"
   }
 }
 
@@ -47,7 +47,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.vpc_name}-subnet-pub-${var.public_subnet_nums[count.index]}"
+    Name = "${var.name_prefix}-subnet-pub-${var.public_subnet_nums[count.index]}"
     Tier = "public"
     AZ   = local.cp_azs[count.index]
   }
@@ -62,7 +62,7 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.vpc_name}-subnet-priv-${var.private_subnet_nums[count.index]}"
+    Name = "${var.name_prefix}-subnet-priv-${var.private_subnet_nums[count.index]}"
     Tier = "private"
     AZ   = local.cp_azs[count.index]
   }
@@ -73,7 +73,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-igw"
+    Name = "${var.name_prefix}-igw"
   }
 }
 
@@ -82,7 +82,7 @@ resource "aws_default_route_table" "main" {
   default_route_table_id = aws_vpc.main.default_route_table_id
 
   tags = {
-    Name = "${var.vpc_name}-auto-main-rtb"
+    Name = "${var.name_prefix}-auto-main-rtb"
   }
 }
 
@@ -91,7 +91,7 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-public-rtb"
+    Name = "${var.name_prefix}-public-rtb"
   }
 }
 
@@ -100,7 +100,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-private-rtb"
+    Name = "${var.name_prefix}-private-rtb"
   }
 }
 

@@ -1,6 +1,6 @@
 # EKS cluster IAM role para o control plane
 resource "aws_iam_role" "eks_cluster" {
-  name = "${var.vpc_name}-eks-cluster-cluster-role"
+  name = "${var.name_prefix}-eks-cluster-cluster-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -16,7 +16,7 @@ resource "aws_iam_role" "eks_cluster" {
   })
 
   tags = {
-    Name = "${var.vpc_name}-eks-cluster-cluster-role"
+    Name = "${var.name_prefix}-eks-cluster-cluster-role"
   }
 }
 
@@ -28,7 +28,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
 
 # EKS Node Group IAM role para os nodes
 resource "aws_iam_role" "eks_nodes" {
-  name = "${var.vpc_name}-eks-cluster-node-role"
+  name = "${var.name_prefix}-eks-cluster-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -44,7 +44,7 @@ resource "aws_iam_role" "eks_nodes" {
   })
 
   tags = {
-    Name = "${var.vpc_name}-eks-cluster-node-role"
+    Name = "${var.name_prefix}-eks-cluster-node-role"
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_iam_role_policy_attachment" "eks_nodes_AmazonEC2ContainerRegistryR
 
 # EKS Cluster
 resource "aws_eks_cluster" "main" {
-  name     = "${var.vpc_name}-eks-cluster"
+  name     = "${var.name_prefix}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster.arn
   version  = "1.35"
 
@@ -76,7 +76,7 @@ resource "aws_eks_cluster" "main" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-eks-cluster"
+    Name = "${var.name_prefix}-eks-cluster"
   }
 
   depends_on = [
@@ -88,7 +88,7 @@ resource "aws_eks_cluster" "main" {
 # EKS Managed Node Group
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "${var.vpc_name}-eks-cluster-nodes"
+  node_group_name = "${var.name_prefix}-eks-cluster-nodes"
   node_role_arn   = aws_iam_role.eks_nodes.arn
 
   # Nodes na subnet pública para acessar o ECR/S3
@@ -104,7 +104,7 @@ resource "aws_eks_node_group" "main" {
   }
 
   labels = {
-    "alpha.eksctl.io/cluster-name" = "${var.vpc_name}-eks-cluster"
+    "alpha.eksctl.io/cluster-name" = "${var.name_prefix}-eks-cluster"
   }
 
   # Opicional: força o update quando o node group mudar
@@ -113,7 +113,7 @@ resource "aws_eks_node_group" "main" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-eks-cluster-nodes"
+    Name = "${var.name_prefix}-eks-cluster-nodes"
   }
 
   depends_on = [
