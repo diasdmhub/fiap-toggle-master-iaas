@@ -1,6 +1,3 @@
-# A região é extraida da configuração do AWS CLI
-provider "aws" {}
-
 # Busca todas AZs da região
 data "aws_availability_zones" "available" {
   state = "available"
