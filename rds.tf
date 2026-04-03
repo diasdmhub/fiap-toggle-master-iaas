@@ -6,6 +6,9 @@ resource "aws_db_subnet_group" "rds" {
   tags = {
     Name = "${var.name_prefix}-rds-subnet-group"
   }
+
+  # Depende da VPC e subnets privadas
+  depends_on = [aws_vpc.main, aws_subnet.private]
 }
 
 # Security Group do RDS
@@ -34,6 +37,9 @@ resource "aws_security_group" "rds" {
   tags = {
     Name = "${var.name_prefix}-rds-sg"
   }
+
+  # Depende da VPC
+  depends_on = [aws_vpc.main]
 }
 
 # Instância RDS PostgreSQL
@@ -70,8 +76,5 @@ resource "aws_db_instance" "main" {
   }
 
   # Dependências explícitas
-  depends_on = [
-    aws_db_subnet_group.rds,
-    aws_security_group.rds
-  ]
+  depends_on = [aws_db_subnet_group.rds, aws_security_group.rds]
 }
