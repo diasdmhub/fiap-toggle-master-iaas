@@ -61,12 +61,17 @@ output "eks_cluster_name" {
 output "ecr_repository_urls" {
   description = "Lista de URLs dos repositórios ECR"
   value = {
-    for name, repo in aws_ecr_repository.service :
+    for name, repo in aws_ecr_repository.toggle :
     name => repo.repository_url
   }
 }
 
 output "sqs_queue_url" {
   description = "URL da fila SQS"
-  value       = aws_sqs_queue.sqs.url
+  value       = aws_sqs_queue.toggle.url
+}
+
+output "dynamodb_table_name" {
+  description = "Nome da tabela DynamoDB"
+  value       = aws_dynamodb_table.toggle.name
 }

@@ -1,5 +1,5 @@
 # Criar repositórios ECR
-resource "aws_ecr_repository" "service" {
+resource "aws_ecr_repository" "toggle" {
   for_each = var.service_list
 
   name                 = "toggle/${each.value}-service"
