@@ -1,7 +1,7 @@
-# Provider region is taken from AWS CLI configuration
+# A região é extraida da configuração do AWS CLI
 provider "aws" {}
 
-# Fetch all available AZs in the current region
+# Busca todas AZs da região
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -9,25 +9,25 @@ data "aws_availability_zones" "available" {
 locals {
   vpc_cidr = "${var.subnet_prefix}.0.0/16"
 
-  # List of AZs limited to 4 for control-plane support
+  # Lista de AZs limitada às 4 primeiras para suportar o control-plane
   azs         = data.aws_availability_zones.available.names
-  cp_az_count = min([length(local.azs), 4])
+  cp_az_count = length(local.azs) < 2 ? error("Pelo menos 2 AZs são necessárias para o control plane EKS") : min(length(local.azs), 4)
   cp_azs      = slice(local.azs, 0, local.cp_az_count)
 
-  # Public subnet CIDRs (non-overlapping third octet)
+  # CIDR de subnets públicas (octeto 3 distinto)
   public_subnet_cidrs = [
     for i in range(local.cp_az_count) :
     "${var.subnet_prefix}.${var.public_subnet_nums[i]}.0/24"
   ]
 
-  # Private subnet CIDRs
+  # CIDR de subnets privadas (octeto 3 distinto)
   private_subnet_cidrs = [
     for i in range(local.cp_az_count) :
     "${var.subnet_prefix}.${var.private_subnet_nums[i]}.0/24"
   ]
 }
 
-# VPC creation + DNS attributes
+# Criação da VPC com atributos DNS
 resource "aws_vpc" "main" {
   cidr_block           = local.vpc_cidr
   enable_dns_support   = true
@@ -38,7 +38,7 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Public subnets (one per AZ) with auto-assign public IP
+# Subnets públicas (uma por AZ) com IP público
 resource "aws_subnet" "public" {
   count                   = length(local.cp_azs)
   vpc_id                  = aws_vpc.main.id
@@ -53,7 +53,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Private subnets (one per AZ) with no auto-assign public IP
+# Subnets públicas (uma por AZ) sem IP público
 resource "aws_subnet" "private" {
   count                   = length(local.cp_azs)
   vpc_id                  = aws_vpc.main.id
@@ -77,7 +77,7 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Tags the default VPC route table
+# Tag da route table automática da VPC
 resource "aws_default_route_table" "main" {
   default_route_table_id = aws_vpc.main.default_route_table_id
 
@@ -86,7 +86,7 @@ resource "aws_default_route_table" "main" {
   }
 }
 
-# Public route table
+# Route table pública
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -95,7 +95,7 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Private route table (no routes added)
+# Route table privada
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -104,21 +104,21 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Default route (0.0.0.0/0) via IGW on the public route table
+# Incluir a rota default (0.0.0.0/0) via IGW na route table pública
 resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.main.id
 }
 
-# Associate public subnets with public route table
+# Associar subnets públicas com a route table pública
 resource "aws_route_table_association" "public" {
   count          = length(local.cp_azs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Associate private subnets with private route table
+# Associar subnets privadas com a route table privada
 resource "aws_route_table_association" "private" {
   count          = length(local.cp_azs)
   subnet_id      = aws_subnet.private[count.index].id
