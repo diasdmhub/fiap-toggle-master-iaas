@@ -27,7 +27,7 @@ resource "aws_security_group" "valkey" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Permite todo o tráfego de saída"
+    description = "Permite todo o trafego de saida"
   }
 
   tags = {
@@ -38,9 +38,7 @@ resource "aws_security_group" "valkey" {
 # Instância Valkey Serveless
 resource "aws_elasticache_serverless_cache" "valkey" {
   name = "${var.name_prefix}-valkey"
-
   engine         = "valkey"
-  engine_version = "8.2"
 
   # Configuração mínima de scaling automático
   cache_usage_limits {
