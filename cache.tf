@@ -1,13 +1,3 @@
-# Subnet Group com as subnets privadas
-resource "aws_elasticache_subnet_group" "valkey" {
-  name       = "${var.name_prefix}-valkey-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
-
-  tags = {
-    Name = "${var.name_prefix}-valkey-subnet-group"
-  }
-}
-
 # Security Group para o Valkey a partir da VPC
 resource "aws_security_group" "valkey" {
   name        = "${var.name_prefix}-valkey-sg"
@@ -39,21 +29,24 @@ resource "aws_security_group" "valkey" {
 resource "aws_elasticache_serverless_cache" "valkey" {
   name = "${var.name_prefix}-valkey"
   engine         = "valkey"
+  description    = "Valkey cache para EKS"
 
   # Configuração mínima de scaling automático
   cache_usage_limits {
     data_storage {
       maximum = 2
+      unit    = "GB"
     }
     ecpu_per_second {
       maximum = 1000
     }
   }
 
-  subnet_group_name  = aws_elasticache_subnet_group.valkey.name
-  security_group_ids = [aws_security_group.valkey.id]
-
-  # Sem backups automáticos
+  # IDs das subnets privadas
+  subnet_ids         = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.elasticache.id]
+  
+  # Backups automáticos desnecessários para teste
   snapshot_retention_limit = 0
 
   tags = {
@@ -61,7 +54,6 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   }
 
   depends_on = [
-    aws_elasticache_subnet_group.valkey,
-    aws_security_group.valkey
+    aws_security_group.elasticache
   ]
 }
