@@ -43,7 +43,7 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   }
 
   # IDs das subnets privadas
-  subnet_ids         = aws_subnet.private[*].id
+  subnet_ids         = slice(aws_subnet.private[*].id, 0, min(local.cp_az_count, 3))
   security_group_ids = [aws_security_group.valkey.id]
   
   # Backups automáticos desnecessários para teste
