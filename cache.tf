@@ -44,7 +44,7 @@ resource "aws_elasticache_serverless_cache" "valkey" {
 
   # IDs das subnets privadas
   subnet_ids         = aws_subnet.private[*].id
-  security_group_ids = [aws_security_group.elasticache.id]
+  security_group_ids = [aws_security_group.valkey.id]
   
   # Backups automáticos desnecessários para teste
   snapshot_retention_limit = 0
@@ -54,6 +54,6 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   }
 
   depends_on = [
-    aws_security_group.elasticache
+    aws_security_group.valkey
   ]
 }
