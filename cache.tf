@@ -34,7 +34,7 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   # Configuração mínima de scaling automático
   cache_usage_limits {
     data_storage {
-      maximum = 2
+      maximum = 1
       unit    = "GB"
     }
     ecpu_per_second {
