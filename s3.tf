@@ -1,6 +1,6 @@
 # Cria um S3 bucket para armazenar o Terraform state
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "${var.name_prefix}-terraform-state"
+  bucket = "terraform-state"
 }
 
 # Habilita o versionamento

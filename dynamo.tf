@@ -14,7 +14,7 @@ resource "aws_dynamodb_table" "toggle" {
 }
 
 resource "aws_dynamodb_table" "terraform_locks" {
-  name           = "${var.name_prefix}-terraform-locks"
+  name           = "terraform-lock"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "LockID"
 
