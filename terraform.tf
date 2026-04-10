@@ -1,3 +1,4 @@
+# definição do provider
 terraform {
   required_providers {
     aws = {
@@ -5,14 +6,14 @@ terraform {
      version = "~> 5.92"
     }
   }
-
   required_version = ">= 1.2"
 
+# backend remoto no S3 bucket da AWS
   backend "s3" {
-    bucket         = "${var.name_prefix}-terraform-state"
+    bucket         = "fiap-toggle-terraform-state"
     key            = "terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "${var.name_prefix}-terraform-lock"
+    dynamodb_table = "fiap-toggle-terraform-lock"
     encrypt        = true
   }
 }
