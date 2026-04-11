@@ -14,6 +14,7 @@ output "eks_outputs" {
 output "rds_outputs" {
   value       = module.rds
   description = "Outputs do modulo RDS"
+  sensitive   = true
 }
 
 output "cache_outputs" {
