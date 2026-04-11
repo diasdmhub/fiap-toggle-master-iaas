@@ -1,3 +1,9 @@
+variable "name_prefix" {
+  description = "Prefixo do nome dos recursos"
+  type        = string
+  default     = "fiap-toggle"
+}
+
 variable "subnet_prefix" {
   description = "Os 2 primeiros octetos do CIDR da VPC"
   type        = string

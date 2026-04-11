@@ -1,3 +1,9 @@
+variable "name_prefix" {
+  description = "Prefixo do nome dos recursos"
+  type        = string
+  default     = "fiap-toggle"
+}
+
 variable "vpc_id" {
   description = "ID da VPC"
   type        = string

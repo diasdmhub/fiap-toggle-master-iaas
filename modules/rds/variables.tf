@@ -1,3 +1,9 @@
+variable "name_prefix" {
+  description = "Prefixo do nome dos recursos"
+  type        = string
+  default     = "fiap-toggle"
+}
+
 variable "db_name" {
   description = "Nome do banco de dados inicial no RDS"
   type        = string
