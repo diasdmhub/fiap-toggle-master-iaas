@@ -43,7 +43,7 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   }
 
   # IDs das subnets privadas - min 2, max 3
-  subnet_ids         = slice(var.private_subnet_ids, 0, min(var.private_subnet_ids, 3))
+  subnet_ids         = slice(var.private_subnet_ids, 0, min(length(var.private_subnet_ids), 3))
   security_group_ids = [aws_security_group.valkey.id]
   
   # Backups automáticos desnecessários para teste
