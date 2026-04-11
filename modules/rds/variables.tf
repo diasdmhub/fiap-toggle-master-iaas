@@ -16,3 +16,18 @@ variable "db_password" {
   default     = "toggle_dbmaster"
   sensitive   = true
 }
+
+variable "vpc_id" {
+  description = "ID da VPC"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "IDs das subnets privadas"
+  type        = list(string)
+}
+
+variable "vpc_cidr" {
+  description = "Bloco CIDR da VPC (usado no Security Group)"
+  type        = string
+}

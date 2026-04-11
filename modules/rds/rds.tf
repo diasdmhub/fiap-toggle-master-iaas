@@ -1,14 +1,14 @@
 # Subnet Group (usa as subnets privadas da VPC)
 resource "aws_db_subnet_group" "rds" {
   name       = "${var.name_prefix}-rds-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = var.private_subnet_ids
 
   tags = {
     Name = "${var.name_prefix}-rds-subnet-group"
   }
 
   # Depende da VPC e subnets privadas
-  depends_on = [aws_vpc.main, aws_subnet.private]
+#  depends_on = [aws_vpc.main, aws_subnet.private]
 }
 
 # Security Group do RDS
@@ -17,14 +17,14 @@ resource "aws_db_subnet_group" "rds" {
 resource "aws_security_group" "rds" {
   name        = "${var.name_prefix}-rds-sg"
   description = "Security Group para o RDS PostgreSQL"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description = "Acesso ao PostgreSQL pelos nodes EKS"
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = [local.vpc_cidr]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {
@@ -37,9 +37,6 @@ resource "aws_security_group" "rds" {
   tags = {
     Name = "${var.name_prefix}-rds-sg"
   }
-
-  # Depende da VPC
-  depends_on = [aws_vpc.main]
 }
 
 # Instância RDS PostgreSQL

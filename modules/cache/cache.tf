@@ -1,14 +1,14 @@
 # Security Group para o Valkey a partir da VPC
 resource "aws_security_group" "valkey" {
   name        = "${var.name_prefix}-valkey-sg"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
   description = "Security Group para o Valkey a partir da VPC"
 
   ingress {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = [local.vpc_cidr]
+    cidr_blocks = [var.vpc_cidr]
     description = "Acesso ao Valkey a partir da VPC"
   }
 
@@ -42,8 +42,8 @@ resource "aws_elasticache_serverless_cache" "valkey" {
     }
   }
 
-  # IDs das subnets privadas
-  subnet_ids         = slice(aws_subnet.private[*].id, 0, min(local.cp_az_count, 3))
+  # IDs das subnets privadas - min 2, max 3
+  subnet_ids         = slice(var.private_subnet_ids, 0, min(var.private_subnet_ids, 3))
   security_group_ids = [aws_security_group.valkey.id]
   
   # Backups automáticos desnecessários para teste
@@ -52,8 +52,4 @@ resource "aws_elasticache_serverless_cache" "valkey" {
   tags = {
     Name = "${var.name_prefix}-valkey"
   }
-
-  depends_on = [
-    aws_security_group.valkey
-  ]
 }
