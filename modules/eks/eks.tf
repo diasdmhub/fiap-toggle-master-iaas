@@ -64,15 +64,15 @@ resource "aws_iam_role_policy_attachment" "eks_nodes_AmazonEC2ContainerRegistryR
 }
 
 
-# EKS Cluster
+# Cluster EKS
 resource "aws_eks_cluster" "main" {
   name     = "${var.name_prefix}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster.arn
   version  = "1.35"
 
   vpc_config {
-    # Control plane ENIs in the private subnets
-    subnet_ids = aws_subnet.private[*].id
+    # ENIs do control plane em subnets privadas
+    subnet_ids = var.private_subnet_ids
   }
 
   tags = {
@@ -91,8 +91,8 @@ resource "aws_eks_node_group" "main" {
   node_group_name = "${var.name_prefix}-eks-cluster-nodes"
   node_role_arn   = aws_iam_role.eks_nodes.arn
 
-  # Nodes na subnet pública para acessar o ECR/S3
-  subnet_ids = aws_subnet.public[*].id
+  # Nodes na subnet pública
+  subnet_ids = var.public_subnet_ids
 
   instance_types = ["t3.small"]
   disk_size      = 20

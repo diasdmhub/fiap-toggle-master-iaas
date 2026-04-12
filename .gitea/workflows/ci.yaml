@@ -1,0 +1,185 @@
+name: ToggleMaster Microservices - CI Pipeline
+
+on:
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+  workflow_dispatch:
+
+# Permissões para OIDC
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ci:
+    name: CI - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: analytics
+            language: python
+            dockerfile: build/Dockerfile-analytics
+            code_dir: build/analytics-service
+            docker_context: build
+            ecr_repo: analytics-service
+            python_version: "3.12"
+
+          - service: auth
+            language: go
+            dockerfile: build/Dockerfile-auth
+            code_dir: build/auth-service
+            docker_context: build
+            ecr_repo: auth-service
+            go_version: "1.23"
+
+          - service: evaluation
+            language: go
+            dockerfile: build/Dockerfile-evaluation
+            code_dir: build/evaluation-service
+            docker_context: build
+            ecr_repo: evaluation-service
+            go_version: "1.23"
+
+          - service: flag
+            language: python
+            dockerfile: build/Dockerfile-flag
+            code_dir: build/flag-service
+            docker_context: build
+            ecr_repo: flag-service
+            python_version: "3.12"
+
+          - service: targeting
+            language: python
+            dockerfile: build/Dockerfile-targeting
+            code_dir: build/targeting-service
+            docker_context: build
+            ecr_repo: targeting-service
+            python_version: "3.12"
+
+    steps:
+      # 1. Checkout
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # # Setup das linguagens
+      # - name: Setup Go
+      #   if: matrix.language == 'go'
+      #   uses: actions/setup-go@v6
+      #   with:
+      #     go-version: ${{ matrix.go_version }}
+
+      # - name: Setup Python
+      #   if: matrix.language == 'python'
+      #   uses: actions/setup-python@v6
+      #   with:
+      #     python-version: ${{ matrix.python_version }}
+
+      # # 2. Build e Unit Test
+      # - name: Build e Unit Test (Go)
+      #   if: matrix.language == 'go'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: go test ./... -v
+
+      # - name: Build e Unit Test (Python)
+      #   if: matrix.language == 'python'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     pip install -r requirements.txt pytest
+      #     # Se não houver testes, o pytest retorna código 5 > não falha o pipeline
+      #     pytest --tb=no || [ $? -eq 5 ] || exit 1
+
+      # # 3. Linter / Static Analysis
+      # - name: Linter (Go - golangci-lint)
+      #   if: matrix.language == 'go'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      #     golangci-lint run --timeout=5m
+
+      # - name: Linter (Python - flake8)
+      #   if: matrix.language == 'python'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     pip install flake8
+      #     flake8 . --max-line-length=120
+
+      # # 4. Security Scan (SAST + SCA)
+      # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      # - name: SCA - Trivy (vulnerabilidades em dependências)
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     scan-type: 'fs'
+      #     scan-ref: ${{ matrix.code_dir }}
+      #     format: 'table'
+      #     exit-code: '1'
+      #     severity: 'CRITICAL'
+      #     ignore-unfixed: 'true'
+
+      # # SAST específico por linguagem (não bloqueia automaticamente)
+      # - name: SAST - gosec (Go)
+      #   if: matrix.language == 'go'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     go install github.com/securego/gosec/v2/cmd/gosec@latest
+      #     gosec -quiet ./...
+
+      # - name: SAST - bandit (Python)
+      #   if: matrix.language == 'python'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     pip install bandit
+      #     bandit -r . -q
+
+      # # 5. Docker Build + Container Scan + Push para AWS ECR
+      # - name: Setup do Docker Buildx
+      #   uses: docker/setup-buildx-action@v4
+
+      # - name: Configurar credenciais AWS (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@v6
+      #   with:
+      #     role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+
+      # - name: Login no Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+
+      # - name: Build da imagem Docker
+      #   run: |
+      #     docker build \
+      #       -f ${{ matrix.dockerfile }} \
+      #       -t temp-image:${{ github.sha }} \
+      #       ${{ matrix.docker_context }}
+
+      # - name: Container Scan - Trivy (imagem)
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     scan-type: 'image'
+      #     image-ref: 'temp-image:${{ github.sha }}'
+      #     format: 'table'
+      #     exit-code: '1'
+      #     severity: 'CRITICAL'
+      #     ignore-unfixed: 'true'
+
+      # - name: Push Docker image to ECR
+      #   run: |
+      #     ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_NAME=${ECR_REGISTRY}/${{ matrix.ecr_repo }}
+          
+      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+      #     TAG="v${{ github.run_number }}-${SHORT_SHA}"
+
+      #     echo "Pushing >> ${IMAGE_NAME}:${TAG}"
+      #     docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:${TAG}
+      #     docker push ${IMAGE_NAME}:${TAG}
+
+      #     # Tag "latest" apenas quando for push na branch main
+      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+      #       docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:latest
+      #       docker push ${IMAGE_NAME}:latest
+      #     fi
