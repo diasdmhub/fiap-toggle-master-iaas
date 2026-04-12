@@ -1,0 +1,486 @@
+name: CI/CD Microsserviços
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  ECR_REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # ========================================
+  # JOB 1: Detectar mudanças em cada serviço
+  # ========================================
+  detect-changes:
+    name: Detectar mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      analytics: ${{ steps.changes.outputs.analytics }}
+      auth: ${{ steps.changes.outputs.auth }}
+      evaluation: ${{ steps.changes.outputs.evaluation }}
+      flag: ${{ steps.changes.outputs.flag }}
+      targeting: ${{ steps.changes.outputs.targeting }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detectar os arquivos alterados
+        id: changes
+        run: |
+          # Para PR, comparar com main; para push, comparar com o commit anterior
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_REF="${{ github.base_ref }}"
+            HEAD_REF="${{ github.head_ref }}"
+            git fetch origin $BASE_REF
+            CHANGED_FILES=$(git diff --name-only origin/$BASE_REF..HEAD)
+          else
+            CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          fi
+          
+          echo "Arquivos alterados:"
+          echo "$CHANGED_FILES"
+          
+          # Verificar cada serviço
+          [[ "$CHANGED_FILES" == *"build/analytics-service/"* ]] && echo "analytics=true" >> $GITHUB_OUTPUT || echo "analytics=false" >> $GITHUB_OUTPUT
+          [[ "$CHANGED_FILES" == *"build/auth-service/"* ]] && echo "auth=true" >> $GITHUB_OUTPUT || echo "auth=false" >> $GITHUB_OUTPUT
+          [[ "$CHANGED_FILES" == *"build/evaluation-service/"* ]] && echo "evaluation=true" >> $GITHUB_OUTPUT || echo "evaluation=false" >> $GITHUB_OUTPUT
+          [[ "$CHANGED_FILES" == *"build/flag-service/"* ]] && echo "flag=true" >> $GITHUB_OUTPUT || echo "flag=false" >> $GITHUB_OUTPUT
+          [[ "$CHANGED_FILES" == *"build/targeting-service/"* ]] && echo "targeting=true" >> $GITHUB_OUTPUT || echo "targeting=false" >> $GITHUB_OUTPUT
+
+  # ========================================
+  # JOB 2: Configurar a autenticação AWS
+  # ========================================
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configurar credenciais AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/GitHubActionsRole
+          aws-region: us-east-1
+
+      - name: Login no ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+  # ============================================================================
+  # BUILD & UNIT TEST - ANALYTICS
+  # ============================================================================
+  # build-analytics:
+  #   name: Build & Test - Analytics
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.analytics == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #         cache: 'pip'
+  #         cache-dependency-path: 'analytics-service/requirements.txt'
+
+  #     - name: Instalar dependências
+  #       working-directory: analytics-service
+  #       run: pip install -r requirements.txt
+
+  #     - name: Executar testes unitários
+  #       working-directory: analytics-service
+  #       run: |
+  #         if [ -f "tests.py" ] || [ -f "test_*.py" ]; then
+  #           pip install pytest pytest-cov
+  #           pytest -v --cov=. --cov-report=xml --cov-report=term
+  #         else
+  #           echo "Nenhum teste encontrado"
+  #         fi
+
+  # ============================================================================
+  # LINT/STATIC ANALYSIS - ANALYTICS
+  # ============================================================================
+  # lint-analytics:
+  #   name: Lint/Static Analysis - Analytics
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.analytics == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #         cache: 'pip'
+
+  #     - name: Instalar ferramentas de lint
+  #       run: pip install pylint flake8 black
+
+  #     - name: Executar pylint
+  #       working-directory: analytics-service
+  #       continue-on-error: true
+  #       run: pylint app.py --disable=all --enable=E,F --exit-zero || true
+
+  #     - name: Executar flake8
+  #       working-directory: analytics-service
+  #       run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  #     - name: Verificar formatação com black
+  #       working-directory: analytics-service
+  #       run: black --check . || echo "❌ Formatação incorreta. Execute: black ."
+
+  # # ============================================================================
+  # # SECURITY SCAN - ANALYTICS
+  # # ============================================================================
+  # security-analytics:
+  #   name: Security Scan - Analytics
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.analytics == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #         cache: 'pip'
+
+  #     - name: SCA - Verificar vulnerabilidades em dependências
+  #       working-directory: analytics-service
+  #       run: |
+  #         pip install pip-audit
+  #         pip-audit --desc --require-hashes || true
+
+  #     - name: SAST - Bandit (análise estática de segurança)
+  #       working-directory: analytics-service
+  #       run: |
+  #         pip install bandit
+  #         bandit -r . -f json -o bandit-report.json || true
+  #         bandit -r . -f txt
+
+  #     - name: Upload relatório Bandit
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: bandit-report-analytics
+  #         path: analytics-service/bandit-report.json
+
+  # # ============================================================================
+  # # BUILD & UNIT TEST - AUTH
+  # # ============================================================================
+  # build-auth:
+  #   name: Build & Test - Auth
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.auth == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+  #         cache-dependency-path: 'auth-service/go.sum'
+
+  #     - name: Download dependências
+  #       working-directory: auth-service
+  #       run: go mod download
+
+  #     - name: Construir
+  #       working-directory: auth-service
+  #       run: go build -v .
+
+  #     - name: Executar testes
+  #       working-directory: auth-service
+  #       run: go test -v -cover ./...
+
+  # # ============================================================================
+  # # LINT/STATIC ANALYSIS - AUTH
+  # # ============================================================================
+  # lint-auth:
+  #   name: Lint/Static Analysis - Auth
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.auth == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+
+  #     - name: Instalar golangci-lint
+  #       run: |
+  #         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+
+  #     - name: Executar golangci-lint
+  #       working-directory: auth-service
+  #       run: golangci-lint run --timeout=5m
+
+  # # ============================================================================
+  # # SECURITY SCAN - AUTH
+  # # ============================================================================
+  # security-auth:
+  #   name: Security Scan - Auth
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.auth == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+
+  #     - name: SAST - Gosec (análise de segurança)
+  #       working-directory: auth-service
+  #       run: |
+  #         go install github.com/securego/gosec/v2/cmd/gosec@latest
+  #         gosec -json -out gosec-report.json ./... || true
+  #         gosec -fmt sarif -out gosec-report.sarif ./... || true
+
+  #     - name: Exibir relatório Gosec
+  #       working-directory: auth-service
+  #       run: gosec -fmt text ./...
+
+  #     - name: Upload relatório Gosec
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: gosec-report-auth
+  #         path: |
+  #           auth-service/gosec-report.json
+  #           auth-service/gosec-report.sarif
+
+  #     - name: SCA - Verificar vulnerabilidades em dependências (Go)
+  #       working-directory: auth-service
+  #       run: |
+  #         go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+  #         osv-scanner --lockfile=go.sum --json || true
+
+  # # ============================================================================
+  # # BUILD & UNIT TEST - EVALUATION
+  # # ============================================================================
+  # build-evaluation:
+  #   name: Build & Test - Evaluation
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.evaluation == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+  #         cache-dependency-path: 'evaluation-service/go.sum'
+
+  #     - name: Download dependências
+  #       working-directory: evaluation-service
+  #       run: go mod download
+
+  #     - name: Construir
+  #       working-directory: evaluation-service
+  #       run: go build -v .
+
+  #     - name: Executar testes
+  #       working-directory: evaluation-service
+  #       run: go test -v -cover ./...
+
+  # # ============================================================================
+  # # LINT/STATIC ANALYSIS - EVALUATION
+  # # ============================================================================
+  # lint-evaluation:
+  #   name: Lint/Static Analysis - Evaluation
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.evaluation == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+
+  #     - name: Instalar golangci-lint
+  #       run: |
+  #         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+
+  #     - name: Executar golangci-lint
+  #       working-directory: evaluation-service
+  #       run: golangci-lint run --timeout=5m
+
+  # # ============================================================================
+  # # SECURITY SCAN - EVALUATION
+  # # ============================================================================
+  # security-evaluation:
+  #   name: Security Scan - Evaluation
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.evaluation == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.21'
+
+  #     - name: SAST - Gosec
+  #       working-directory: evaluation-service
+  #       run: |
+  #         go install github.com/securego/gosec/v2/cmd/gosec@latest
+  #         gosec -json -out gosec-report.json ./... || true
+  #         gosec -fmt text ./...
+
+  #     - name: Upload relatório Gosec
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: gosec-report-evaluation
+  #         path: evaluation-service/gosec-report.json
+
+  #     - name: SCA - OSV Scanner
+  #       working-directory: evaluation-service
+  #       run: |
+  #         go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+  #         osv-scanner --lockfile=go.sum --json || true
+
+  # # ============================================================================
+  # # BUILD & UNIT TEST - FLAG
+  # # ============================================================================
+  # build-flag:
+  #   name: Build & Test - Flag
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.flag == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #         cache: 'pip'
+  #         cache-dependency-path: 'flag-service/requirements.txt'
+
+  #     - name: Instalar dependências
+  #       working-directory: flag-service
+  #       run: pip install -r requirements.txt
+
+  #     - name: Executar testes
+  #       working-directory: flag-service
+  #       run: |
+  #         if [ -f "tests.py" ] || [ -f "test_*.py" ]; then
+  #           pip install pytest
+  #           pytest -v
+  #         else
+  #           echo "Nenhum teste encontrado"
+  #         fi
+
+  # # ============================================================================
+  # # LINT/STATIC ANALYSIS - FLAG
+  # # ============================================================================
+  # lint-flag:
+  #   name: Lint/Static Analysis - Flag
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.flag == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #         cache: 'pip'
+
+  #     - name: Instalar ferramentas
+  #       run: pip install pylint flake8
+
+  #     - name: Executar flake8
+  #       working-directory: flag-service
+  #       run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  # # ============================================================================
+  # # SECURITY SCAN - FLAG
+  # # ============================================================================
+  # security-flag:
+  #   name: Security Scan - Flag
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.flag == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+
+  #     - name: SCA - pip-audit
+  #       working-directory: flag-service
+  #       run: |
+  #         pip install pip-audit
+  #         pip-audit --desc || true
+
+  #     - name: SAST - Bandit
+  #       working-directory: flag-service
+  #       run: |
+  #         pip install bandit
+  #         bandit -r . -f json -o bandit-report.json || true
+  #         bandit -r . -f txt
+
+  #     - name: Upload relatório
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: bandit-report-flag
+  #         path: flag-service/bandit-report.json
+
+  # # ============================================================================
+  # # BUILD & UNIT TEST - TARGETING
+  # # ============================================================================
+  # build-targeting:
+  #   name: Build & Test - Targeting
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.targeting == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout código
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version

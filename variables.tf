@@ -58,3 +58,17 @@ variable "db_password" {
   default     = "toggle_dbmaster"
   sensitive   = true
 }
+
+# Variáveis do CI git
+#############################
+variable "git_org" {
+  description = "git account"
+  type        = string
+  default     = "git_acc"
+}
+
+variable "git_repo" {
+  description = "git repository"
+  type        = string
+  default     = "repo_name"
+}

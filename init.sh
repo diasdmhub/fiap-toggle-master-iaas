@@ -22,7 +22,9 @@ aws s3api put-bucket-encryption \
   --server-side-encryption-configuration '{"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}' \
   || true
 
-# 1.4 Cria a tablea DynamoDB para o arquivo de lock
+# 2 Cria a tabela DynamoDB com idempotencia - ignora se já existir
+
+# 2.1 Cria a tabela DynamoDB
 aws dynamodb create-table \
   --table-name fiap-toggle-terraform-lock \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
@@ -31,5 +33,11 @@ aws dynamodb create-table \
   || true
 
 
-# 2 Inicialização do Terraform
+# 3 Inicialização do Terraform
 terraform init -reconfigure
+
+# 4 Plan do Terraform
+terraform plan
+
+# 5 Apply do Terraform
+terraform apply

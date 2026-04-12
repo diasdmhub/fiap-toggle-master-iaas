@@ -62,3 +62,11 @@ module "dynamo" {
 
   name_prefix = var.name_prefix
 }
+
+module "oidc" {
+  source = "./modules/oidc"
+
+  name_prefix = var.name_prefix
+  git_org     = var.git_org
+  git_repo    = var.git_repo
+}
