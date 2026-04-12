@@ -36,3 +36,8 @@ output "sqs_outputs" {
   value       = module.sqs
   description = "Outputs do modulo SQS"
 }
+
+output "oidc_outputs" {
+  value       = module.oidc
+  description = "Outputs do modulo OIDC"
+}
