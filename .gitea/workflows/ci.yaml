@@ -91,6 +91,7 @@ jobs:
         run: |
           export PORT="${{ matrix.serv_port }}"
           export MASTER_KEY="admin123"
+          export DATABASE_URL="postgres://SEU_USUARIO:SUA_SENHA@localhost:5432/auth_db"
           export REDIS_URL="redis://localhost:6379"
           export FLAG_SERVICE_URL="http://localhost:8002"
           export TARGETING_SERVICE_URL="http://localhost:8003"
