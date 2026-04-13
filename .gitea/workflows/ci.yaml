@@ -21,28 +21,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - service: analytics
-            language: python
-            dockerfile: build/Dockerfile-analytics
-            code_dir: build/analytics-service
-            docker_context: build
-            ecr_repo: analytics-service
-            python_version: "3.12"
-
           - service: auth
             language: go
             dockerfile: build/Dockerfile-auth
             code_dir: build/auth-service
             docker_context: build
             ecr_repo: auth-service
-            go_version: "1.23"
-
-          - service: evaluation
-            language: go
-            dockerfile: build/Dockerfile-evaluation
-            code_dir: build/evaluation-service
-            docker_context: build
-            ecr_repo: evaluation-service
             go_version: "1.23"
 
           - service: flag
@@ -61,23 +45,39 @@ jobs:
             ecr_repo: targeting-service
             python_version: "3.12"
 
+          - service: evaluation
+            language: go
+            dockerfile: build/Dockerfile-evaluation
+            code_dir: build/evaluation-service
+            docker_context: build
+            ecr_repo: evaluation-service
+            go_version: "1.23"
+
+          - service: analytics
+            language: python
+            dockerfile: build/Dockerfile-analytics
+            code_dir: build/analytics-service
+            docker_context: build
+            ecr_repo: analytics-service
+            python_version: "3.12"
+
     steps:
       # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # # Setup das linguagens
-      # - name: Setup Go
-      #   if: matrix.language == 'go'
-      #   uses: actions/setup-go@v6
-      #   with:
-      #     go-version: ${{ matrix.go_version }}
+      # Setup das linguagens
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go_version }}
 
-      # - name: Setup Python
-      #   if: matrix.language == 'python'
-      #   uses: actions/setup-python@v6
-      #   with:
-      #     python-version: ${{ matrix.python_version }}
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python_version }}
 
       # # 2. Build e Unit Test
       # - name: Build e Unit Test (Go)
