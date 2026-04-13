@@ -112,7 +112,7 @@ jobs:
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           pip install -r requirements.txt
-          gunicorn --bind 0.0.0.0:${{ matrix.code_dir }} app:app
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app
           curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 3. Linter / Static Analysis
