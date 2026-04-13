@@ -27,7 +27,7 @@ jobs:
             code_dir: build/auth-service
             docker_context: build
             ecr_repo: auth-service
-            go_version: "1.23"
+            go_version: "1.26"
             serv_port: 8001
 
           - service: flag
@@ -54,7 +54,7 @@ jobs:
             code_dir: build/evaluation-service
             docker_context: build
             ecr_repo: evaluation-service
-            go_version: "1.23"
+            go_version: "1.26"
             serv_port: 8004
 
           - service: analytics
@@ -67,16 +67,36 @@ jobs:
             serv_port: 8005
 
     steps:
-      # 1. Checkout
+      # 1.1 Checkout
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # Setup do Go e do Python
+      # 1.2 Setup do DB PSQL
+      - name: Preparar o DB
+        if: |
+          matrix.service == 'auth' ||
+          matrix.service == 'flag' ||
+          matrix.service == 'targeting'
+        uses: ikalnytskyi/action-setup-postgres@v8
+        with:
+          username: toggle
+          password: toggle
+          database: toggle
+          postgres-version: "18"
+
+      # 1.3 Setup do Redis
+      - uses: shogo82148/actions-setup-redis@v1
+        if: matrix.service == 'evaluation'
+        with:
+          redis-version: latest
+
+      # 1.4 Setup do Go e do Python
       - name: Setup Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go_version }}
+          check-latest: true
+          #go-version: ${{ matrix.go_version }}
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -84,51 +104,51 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      # 2. Build e Unit Test
-      - name: Build e Unit Test (Go)
+      # 2. Linter / Static Analysis
+      - name: Linter (Go - golangci-lint)
         if: matrix.language == 'go'
         working-directory: ${{ matrix.code_dir }}
         run: |
-          export PORT="${{ matrix.serv_port }}"
-          export MASTER_KEY="admin123"
-          export DATABASE_URL="postgres://SEU_USUARIO:SUA_SENHA@localhost:5432/auth_db"
-          export REDIS_URL="redis://localhost:6379"
-          export FLAG_SERVICE_URL="http://localhost:8002"
-          export TARGETING_SERVICE_URL="http://localhost:8003"
-          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-          export AWS_REGION="${{ secrets.AWS_REGION }}"
-          go mod tidy
-          go run .
-          curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run --timeout=5m
 
-      - name: Build e Unit Test (Python)
+      - name: Linter (Python - flake8)
         if: matrix.language == 'python'
         working-directory: ${{ matrix.code_dir }}
         run: |
-          export PORT="${{ matrix.serv_port }}"
-          export DATABASE_URL="postgres://SEU_USUARIO:SUA_SENHA@localhost:5432/flags_db"
-          export AUTH_SERVICE_URL="http://localhost:${{ matrix.serv_port }}"
-          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-          export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
-          export AWS_REGION="${{ secrets.AWS_REGION }}"
-          pip install -r requirements.txt
-          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
-          curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          pip install flake8
+          flake8 . --max-line-length=120
 
-      # # 3. Linter / Static Analysis
-      # - name: Linter (Go - golangci-lint)
+      # # 3. Build e Unit Test
+      # - name: Build e Unit Test (Go)
       #   if: matrix.language == 'go'
       #   working-directory: ${{ matrix.code_dir }}
       #   run: |
-      #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      #     golangci-lint run --timeout=5m
+      #     export PORT="${{ matrix.serv_port }}"
+      #     export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
+      #     export MASTER_KEY="admin123"
+      #     export REDIS_URL="redis://localhost:6379"
+      #     export FLAG_SERVICE_URL="http://localhost:8002"
+      #     export TARGETING_SERVICE_URL="http://localhost:8003"
+      #     export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+      #     export AWS_REGION="${{ secrets.AWS_REGION }}"
+      #     go mod tidy
+      #     go run .
+      #     curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
-      # - name: Linter (Python - flake8)
+      # - name: Build e Unit Test (Python)
       #   if: matrix.language == 'python'
       #   working-directory: ${{ matrix.code_dir }}
       #   run: |
-      #     pip install flake8
-      #     flake8 . --max-line-length=120
+      #     export PORT="${{ matrix.serv_port }}"
+      #     export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
+      #     export AUTH_SERVICE_URL="http://localhost:${{ matrix.serv_port }}"
+      #     export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+      #     export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
+      #     export AWS_REGION="${{ secrets.AWS_REGION }}"
+      #     pip install -r requirements.txt
+      #     gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
+      #     curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 4. Security Scan (SAST + SCA)
       # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
