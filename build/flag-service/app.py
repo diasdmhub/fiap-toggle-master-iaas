@@ -56,10 +56,10 @@ def require_auth(f):
 
         except requests.exceptions.Timeout:
             log.error("Timeout ao conectar com o auth-service")
-            return jsonify({"error": "Serviço de autenticação indisponível (timeout)"}), 504 # Gateway Timeout
+            return jsonify({"error": "Serviço de autenticação indisponível (timeout)"}), 504  # Gateway Timeout
         except requests.exceptions.RequestException as e:
             log.error(f"Erro ao conectar com o auth-service: {e}")
-            return jsonify({"error": "Serviço de autenticação indisponível"}), 503 # Service Unavailable
+            return jsonify({"error": "Serviço de autenticação indisponível"}), 503  # Service Unavailable
 
         # Se a chave for válida, continua para a rota
         return f(*args, **kwargs)
@@ -67,9 +67,11 @@ def require_auth(f):
 
 # --- Endpoints da API ---
 
+
 @app.route('/health')
 def health():
     return jsonify({"status": "ok"})
+
 
 @app.route('/flags', methods=['POST'])
 @require_auth
@@ -96,18 +98,22 @@ def create_flag():
         new_flag = cur.fetchone()
         conn.commit()
         log.info(f"Flag '{name}' criada com sucesso.")
-        return jsonify(new_flag), 201
+        return jsonify(new_flag),
+            201
     except psycopg2.IntegrityError:
         if conn: conn.rollback()
         log.warning(f"Tentativa de criar flag duplicada: '{name}'")
-        return jsonify({"error": f"Flag '{name}' já existe"}), 409
+        return jsonify({"error": f"Flag '{name}' já existe"}),
+            409
     except Exception as e:
         if conn: conn.rollback()
         log.error(f"Erro ao criar flag: {e}")
-        return jsonify({"error": "Erro interno do servidor", "details": str(e)}), 500
+        return jsonify({"error": "Erro interno do servidor", "details": str(e)}),
+            500
     finally:
         if cur: cur.close()
         if conn: pool.putconn(conn)
+
 
 @app.route('/flags', methods=['GET'])
 @require_auth
@@ -123,10 +129,12 @@ def get_flags():
         return jsonify(flags)
     except Exception as e:
         log.error(f"Erro ao buscar flags: {e}")
-        return jsonify({"error": "Erro interno do servidor", "details": str(e)}), 500
+        return jsonify({"error": "Erro interno do servidor", "details": str(e)}),
+            500
     finally:
         if cur: cur.close()
         if conn: pool.putconn(conn)
+
 
 @app.route('/flags/<string:name>', methods=['GET'])
 @require_auth
@@ -144,10 +152,12 @@ def get_flag(name):
         return jsonify(flag)
     except Exception as e:
         log.error(f"Erro ao buscar flag '{name}': {e}")
-        return jsonify({"error": "Erro interno do servidor", "details": str(e)}), 500
+        return jsonify({"error": "Erro interno do servidor", "details": str(e)}),
+            500
     finally:
         if cur: cur.close()
         if conn: pool.putconn(conn)
+
 
 @app.route('/flags/<string:name>', methods=['PUT'])
 @require_auth
@@ -171,7 +181,7 @@ def update_flag(name):
     if not fields:
         return jsonify({"error": "Pelo menos um campo ('description', 'is_enabled') é obrigatório"}), 400
 
-    values.append(name) # Adiciona o 'name' para a cláusula WHERE
+    values.append(name)  # Adiciona o 'name' para a cláusula WHERE
 
     query = f"UPDATE flags SET {', '.join(fields)} WHERE name = %s RETURNING *"
 
@@ -183,19 +193,23 @@ def update_flag(name):
         cur.execute(query, tuple(values))
 
         if cur.rowcount == 0:
-            return jsonify({"error": "Flag não encontrada"}), 404
+            return jsonify({"error": "Flag não encontrada"}),
+                404
 
         updated_flag = cur.fetchone()
         conn.commit()
         log.info(f"Flag '{name}' atualizada com sucesso.")
-        return jsonify(updated_flag), 200
+        return jsonify(updated_flag),
+            200
     except Exception as e:
         if conn: conn.rollback()
         log.error(f"Erro ao atualizar flag '{name}': {e}")
-        return jsonify({"error": "Erro interno do servidor", "details": str(e)}), 500
+        return jsonify({"error": "Erro interno do servidor", "details": str(e)}),
+            500
     finally:
         if cur: cur.close()
         if conn: pool.putconn(conn)
+
 
 @app.route('/flags/<string:name>', methods=['DELETE'])
 @require_auth
@@ -209,18 +223,22 @@ def delete_flag(name):
         cur.execute("DELETE FROM flags WHERE name = %s", (name,))
 
         if cur.rowcount == 0:
-            return jsonify({"error": "Flag não encontrada"}), 404
+            return jsonify({"error": "Flag não encontrada"}),
+                404
 
         conn.commit()
         log.info(f"Flag '{name}' deletada com sucesso.")
-        return "", 204 # 204 No Content
+        return "",
+            204  # 204 No Content
     except Exception as e:
         if conn: conn.rollback()
         log.error(f"Erro ao deletar flag '{name}': {e}")
-        return jsonify({"error": "Erro interno do servidor", "details": str(e)}), 500
+        return jsonify({"error": "Erro interno do servidor", "details": str(e)}),
+            500
     finally:
         if cur: cur.close()
         if conn: pool.putconn(conn)
+
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 8002))
