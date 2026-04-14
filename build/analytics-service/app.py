@@ -117,6 +117,7 @@ def sqs_worker_loop():
 
 # --- Servidor Flask (Apenas para Health Check) ---
 
+
 app = Flask(__name__)
 
 
