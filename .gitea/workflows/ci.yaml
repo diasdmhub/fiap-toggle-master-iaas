@@ -68,7 +68,7 @@ jobs:
 
     services:
       postgres:
-        image: psql
+        image: docker.io/library/postgres:18-alpine
         env:
           POSTGRES_USER: toggle  # ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: toggle  # ${{ secrets.POSTGRES_PASS }}
