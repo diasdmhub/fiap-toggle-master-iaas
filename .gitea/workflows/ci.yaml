@@ -75,6 +75,11 @@ jobs:
           POSTGRES_DB: toggle  # ${{ secrets.POSTGRES_DB }}
         ports:
           - 5432:5432
+        volumes:
+        # Monta os scripts de inicialização dos microserviços
+          - ${{ github.workspace }}/auth-service/db/init.sql:/docker-entrypoint-initdb.d/init-auth-service.sql
+          - ${{ github.workspace }}/flag-service/db/init.sql:/docker-entrypoint-initdb.d/init-flag-service.sql
+          - ${{ github.workspace }}/targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init-targeting-service.sql
 
     steps:
       # 1.1 Checkout
@@ -82,10 +87,6 @@ jobs:
         uses: actions/checkout@v6
 
       # 1.2 Setup do DB PSQL
-      - name: Build imagem PSQL
-        run: |
-          docker build -f Dockerfile-psql -t psql ./build/
-
       # - name: Preparar o DB
       #   if: |
       #     matrix.service == 'auth' ||
