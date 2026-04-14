@@ -82,7 +82,7 @@ jobs:
           username: toggle
           password: toggle
           database: toggle
-          postgres-version: "18"
+          postgres-version: "17"
 
       # 1.3 Setup do Redis
       - uses: shogo82148/actions-setup-redis@v1
@@ -95,8 +95,8 @@ jobs:
         if: matrix.language == 'go'
         uses: actions/setup-go@v6
         with:
+          go-version: ${{ matrix.go_version }}
           check-latest: true
-          #go-version: ${{ matrix.go_version }}
 
       - name: Setup Python
         if: matrix.language == 'python'
