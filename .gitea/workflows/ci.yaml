@@ -165,9 +165,8 @@ jobs:
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app  > gunicorn.log 2>&1 &
-          sleep 2
-          cat gunicorn.log  # View startup errors
-          curl -v "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          cat gunicorn.log  # Visualizar possíveis erros
+          for i in 1 2; do sleep 2; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
 
       # # 3. Build e Unit Test
       # - name: Build e Unit Test (Go)
