@@ -118,7 +118,7 @@ jobs:
         with:
           version: "latest"
           working-directory: "./${{ matrix.code_dir }}"
-          args: "--mod=mod"
+          args: "--modules-download-mode=mod"
 
       # - name: Linter (Go - 
       #   if: matrix.language == 'go'
