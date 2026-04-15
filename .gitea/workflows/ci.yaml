@@ -120,13 +120,6 @@ jobs:
           working-directory: "./${{ matrix.code_dir }}"
           args: "--modules-download-mode=mod"
 
-      # - name: Linter (Go - 
-      #   if: matrix.language == 'go'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      #     golangci-lint run --timeout=5m
-
       - name: Python Lint (Ruff)
         if: matrix.language == 'python'
         uses: astral-sh/ruff-action@v4.0.0
@@ -134,12 +127,45 @@ jobs:
             version: "latest"
             src: "./${{ matrix.code_dir }}"
 
-      # - name: Python Lint (flake8)
-      #   if: matrix.language == 'python'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     pip install flake8
-      #     flake8 . --max-line-length=120
+      # 3. Local Build e Unit Test
+      - name: Preparação de dependências (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        run: go mod tidy
+
+      - name: Teste unitário (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        run: |
+          export PORT="${{ matrix.serv_port }}"
+          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export MASTER_KEY="admin123"
+          export REDIS_URL="redis://redis:6379"
+          export FLAG_SERVICE_URL="http://localhost:8002"
+          export TARGETING_SERVICE_URL="http://localhost:8003"
+          export SERVICE_API_KEY="SUA_CHAVE_DE_SERVICO"
+          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          go run .
+          curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+
+      - name: Preparação de dependências (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: pip install -r requirements.txt
+
+      - name: Teste unitário (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: |
+          export PORT="${{ matrix.serv_port }}"
+          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export AUTH_SERVICE_URL="http://localhost:8001"
+          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+          export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
+          curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 3. Build e Unit Test
       # - name: Build e Unit Test (Go)
@@ -147,9 +173,9 @@ jobs:
       #   working-directory: ${{ matrix.code_dir }}
       #   run: |
       #     export PORT="${{ matrix.serv_port }}"
-      #     export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
+      #     export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
       #     export MASTER_KEY="admin123"
-      #     export REDIS_URL="redis://localhost:6379"
+      #     export REDIS_URL="redis://redis:6379"
       #     export FLAG_SERVICE_URL="http://localhost:8002"
       #     export TARGETING_SERVICE_URL="http://localhost:8003"
       #     export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
