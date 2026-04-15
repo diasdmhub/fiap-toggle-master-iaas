@@ -147,7 +147,7 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           go run . &
-          curl -v "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          for i in 1 2; do sleep 2; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -165,8 +165,7 @@ jobs:
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app  > gunicorn.log 2>&1 &
-          cat gunicorn.log  # Visualizar possíveis erros
-          for i in 1 2; do sleep 2; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
+          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
 
       # # 3. Build e Unit Test
       # - name: Build e Unit Test (Go)
@@ -184,20 +183,6 @@ jobs:
       #     go mod tidy
       #     go run .
       #     curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
-
-      # - name: Build e Unit Test (Python)
-      #   if: matrix.language == 'python'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     export PORT="${{ matrix.serv_port }}"
-      #     export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
-      #     export AUTH_SERVICE_URL="http://localhost:${{ matrix.serv_port }}"
-      #     export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-      #     export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
-      #     export AWS_REGION="${{ secrets.AWS_REGION }}"
-      #     pip install -r requirements.txt
-      #     gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
-      #     curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 4. Security Scan (SAST + SCA)
       # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
