@@ -147,7 +147,7 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           go run . &
-          curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          curl -v "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -164,8 +164,8 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
-          gunicorn --log-level "debug" --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
-          curl "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
+          curl -v "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 3. Build e Unit Test
       # - name: Build e Unit Test (Go)
