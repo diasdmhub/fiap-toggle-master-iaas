@@ -12,6 +12,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  GO_VERSION: stable
+
 jobs:
   ci:
     name: CI - ${{ matrix.service }}
@@ -67,6 +70,7 @@ jobs:
             serv_port: 8005
 
     services:
+      # PSQL para testes dos microserviços
       postgres:
         image: docker.io/library/postgres:18-alpine
         container_name: psql
@@ -78,10 +82,11 @@ jobs:
           - 5432:5432
         volumes:
         # Monta os scripts de inicialização dos microserviços
-          - ${{ github.workspace }}/auth-service/db/init.sql:/docker-entrypoint-initdb.d/init-auth-service.sql
-          - ${{ github.workspace }}/flag-service/db/init.sql:/docker-entrypoint-initdb.d/init-flag-service.sql
-          - ${{ github.workspace }}/targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init-targeting-service.sql
+          - ${{ github.workspace }}/build/auth-service/db/init.sql:/docker-entrypoint-initdb.d/init-auth-service.sql
+          - ${{ github.workspace }}/build/flag-service/db/init.sql:/docker-entrypoint-initdb.d/init-flag-service.sql
+          - ${{ github.workspace }}/build/targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init-targeting-service.sql
 
+      # Redis para testes dos microserviços
       redis:
         image: docker.io/library/redis:alpine
         container_name: redis
@@ -93,19 +98,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # # 1.2 Setup do Redis
-      # - uses: shogo82148/actions-setup-redis@v1
-      #   if: matrix.service == 'evaluation'
-      #   with:
-      #     redis-version: latest
-
-      # 1.4 Setup do Go e do Python
+      # 1.2 Setup do Go e do Python
       - name: Setup Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go_version }}
-          check-latest: true
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -114,19 +112,33 @@ jobs:
           python-version: ${{ matrix.python_version }}
 
       # 2. Linter / Static Analysis
-      - name: Linter (Go - golangci-lint)
+      - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
-        working-directory: ${{ matrix.code_dir }}
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run --timeout=5m
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: "latest"
+          working-directory: "./${{ matrix.code_dir }}"
 
-      - name: Linter (Python - flake8)
+      # - name: Linter (Go - 
+      #   if: matrix.language == 'go'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      #     golangci-lint run --timeout=5m
+
+      - name: Python Lint (Ruff)
         if: matrix.language == 'python'
-        working-directory: ${{ matrix.code_dir }}
-        run: |
-          pip install flake8
-          flake8 . --max-line-length=120
+        uses: astral-sh/ruff-action@v4
+        with:
+            version: "latest"
+            src: "./${{ matrix.code_dir }}"
+
+      # - name: Python Lint (flake8)
+      #   if: matrix.language == 'python'
+      #   working-directory: ${{ matrix.code_dir }}
+      #   run: |
+      #     pip install flake8
+      #     flake8 . --max-line-length=120
 
       # # 3. Build e Unit Test
       # - name: Build e Unit Test (Go)
