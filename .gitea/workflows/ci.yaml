@@ -164,7 +164,9 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
-          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app &
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app  > gunicorn.log 2>&1 &
+          sleep 2
+          cat gunicorn.log  # View startup errors
           curl -v "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
 
       # # 3. Build e Unit Test
