@@ -148,7 +148,7 @@ func (a *App) fetchRule(flagName string) (*TargetingRule, error) {
 		return nil, fmt.Errorf("targeting-service retornou status %d", resp.StatusCode)
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)  // Alterado de "body, _ := ioutil.ReadAll(resp.Body)"
+	body, _ := io.ReadAll(resp.Body)  // Alterado de "body, _ := ioutil.ReadAll(resp.Body)"
 	var rule TargetingRule
 	if err := json.Unmarshal(body, &rule); err != nil {
 		return nil, fmt.Errorf("erro ao desserializar resposta do targeting-service: %w", err)
