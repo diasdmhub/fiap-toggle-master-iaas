@@ -128,7 +128,7 @@ jobs:
 
       - name: Python Lint (Ruff)
         if: matrix.language == 'python'
-        uses: astral-sh/ruff-action@v4
+        uses: astral-sh/ruff-action@v4.0.0
         with:
             version: "latest"
             src: "./${{ matrix.code_dir }}"
