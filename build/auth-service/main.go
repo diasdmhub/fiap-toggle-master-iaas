@@ -42,7 +42,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Não foi possível conectar ao banco de dados: %v", err)
 	}
-	defer db.Close()
+	//defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	app := &App{
 		DB:         db,
