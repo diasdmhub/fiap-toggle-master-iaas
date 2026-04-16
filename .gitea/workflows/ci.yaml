@@ -198,9 +198,9 @@ jobs:
       # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
         run: |
-          pwd
-          docker run --rm -v $(pwd):/rootfs docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
-          fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed /rootfs/${{ matrix.code_dir }}
+          # Usa "--volumes-from" para herdar o workdir do runner
+          docker run --rm --volumes-from $(hostname) docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
+          fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed ${{ github.workspace }}/${{ matrix.code_dir }}
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
