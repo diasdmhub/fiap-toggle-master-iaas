@@ -195,11 +195,12 @@ jobs:
       #     severity: 'CRITICAL'
       #     ignore-unfixed: true
 
-      # Usa a imagem Docker diretamente para evitar falha de autenticação no Github
+      # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
         run: |
-          docker run --rm docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
-          fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed ${{ matrix.code_dir }}
+          pwd
+          docker run --rm -v $(pwd):/rootfs docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
+          fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed /rootfs/${{ matrix.code_dir }}
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
