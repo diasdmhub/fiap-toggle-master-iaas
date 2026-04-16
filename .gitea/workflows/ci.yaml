@@ -197,10 +197,9 @@ jobs:
 
       # Usa a imagem Docker diretamente para evitar autenticação no Github
       - name: SCA - Trivy
-        image: docker.io/aquasecurity/trivy:${{ env.TRIVY_VERSION }}
-        with:
-        # Os "args" são passados ao entrypoint
-          args: fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed ${{ matrix.code_dir }}
+        run: |
+          docker run --rm -v $(pwd):/rootfs aquasecurity/trivy:latest \
+          fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed /rootfs/${{ matrix.code_dir }}
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
