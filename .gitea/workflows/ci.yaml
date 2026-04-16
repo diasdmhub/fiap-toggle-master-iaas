@@ -94,11 +94,11 @@ jobs:
           - 6379:6379
 
     steps:
-      # 1.1 Checkout
+      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # 1.2 Setup do Go e do Python
+      # 2. Setup do Go e do Python
       - name: Setup Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v6
@@ -111,7 +111,7 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      # 2. Linter / Static Analysis
+      # 3. Linter / Static Analysis
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
         uses: golangci/golangci-lint-action@v9
@@ -127,7 +127,7 @@ jobs:
             version: "latest"
             src: "./${{ matrix.code_dir }}"
 
-      # 3. Local Build e Unit Test
+      # 4. Local Build e Unit Test
       - name: Preparação de dependências (Go)
         if: matrix.language == 'go'
         working-directory: ${{ matrix.code_dir }}
@@ -147,7 +147,7 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           go run . &
-          for i in 1 2; do sleep 2; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
+          for i in 1 2; do sleep 2; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -165,36 +165,19 @@ jobs:
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app  > gunicorn.log 2>&1 &
-          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fs "http://localhost:${{ matrix.serv_port }}/health" && { echo "Health OK" ; exit 0 ; } || echo "Health FAIL - $i"; done
+          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-      # # 3. Build e Unit Test
-      # - name: Build e Unit Test (Go)
-      #   if: matrix.language == 'go'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     export PORT="${{ matrix.serv_port }}"
-      #     export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
-      #     export MASTER_KEY="admin123"
-      #     export REDIS_URL="redis://redis:6379"
-      #     export FLAG_SERVICE_URL="http://localhost:8002"
-      #     export TARGETING_SERVICE_URL="http://localhost:8003"
-      #     export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-      #     export AWS_REGION="${{ secrets.AWS_REGION }}"
-      #     go mod tidy
-      #     go run .
-      #     curl -fs "http://localhost:${{ matrix.serv_port }}/health" && echo "Health OK" || echo "Health FAIL"
-
-      # # 4. Security Scan (SAST + SCA)
-      # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
-      # - name: SCA - Trivy (vulnerabilidades em dependências)
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     scan-type: 'fs'
-      #     scan-ref: ${{ matrix.code_dir }}
-      #     format: 'table'
-      #     exit-code: '1'
-      #     severity: 'CRITICAL'
-      #     ignore-unfixed: 'true'
+      # 5. Security Scan (SAST + SCA)
+      # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      - name: SCA - Trivy (vulnerabilidades em dependências)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ${{ matrix.code_dir }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL
+          ignore-unfixed: true
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
