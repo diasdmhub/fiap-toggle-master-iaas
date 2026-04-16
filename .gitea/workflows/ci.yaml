@@ -196,6 +196,7 @@ jobs:
       #     ignore-unfixed: true
 
       # Usa a imagem Docker diretamente para evitar autenticação no Github
+      - run: pwd ; echo -e "\n$PWD\n";
       - name: SCA - Trivy
         run: |
           docker run --rm -v $(pwd):/rootfs docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
