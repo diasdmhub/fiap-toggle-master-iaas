@@ -196,9 +196,10 @@ jobs:
       #     ignore-unfixed: true
 
       # Usa a imagem Docker diretamente para evitar autenticação no Github
-      - run: pwd ; echo -e "\n$PWD\n";
       - name: SCA - Trivy
         run: |
+          pwd
+          ls -lah
           docker run --rm -v $(pwd):/rootfs docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed /rootfs/${{ matrix.code_dir }}
 
