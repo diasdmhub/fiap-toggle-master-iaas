@@ -13,7 +13,9 @@ permissions:
   contents: read
 
 env:
-  GO_VERSION: stable
+  PYTHON_VERSION: "3.14"
+  GO_VERSION: "stable"
+  TRIVY_VERSION: "0.69.3"
 
 jobs:
   ci:
@@ -30,7 +32,7 @@ jobs:
             code_dir: build/auth-service
             docker_context: build
             ecr_repo: auth-service
-            go_version: "1.26"
+            go_version: ${{ env.GO_VERSION }}
             serv_port: 8001
 
           - service: flag
@@ -39,7 +41,7 @@ jobs:
             code_dir: build/flag-service
             docker_context: build
             ecr_repo: flag-service
-            python_version: "3.12"
+            python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8002
 
           - service: targeting
@@ -48,7 +50,7 @@ jobs:
             code_dir: build/targeting-service
             docker_context: build
             ecr_repo: targeting-service
-            python_version: "3.12"
+            python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8003
 
           - service: evaluation
@@ -57,7 +59,7 @@ jobs:
             code_dir: build/evaluation-service
             docker_context: build
             ecr_repo: evaluation-service
-            go_version: "1.26"
+            go_version: ${{ env.GO_VERSION }}
             serv_port: 8004
 
           - service: analytics
@@ -66,7 +68,7 @@ jobs:
             code_dir: build/analytics-service
             docker_context: build
             ecr_repo: analytics-service
-            python_version: "3.12"
+            python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8005
 
     services:
@@ -103,7 +105,7 @@ jobs:
         if: matrix.language == 'go'
         uses: actions/setup-go@v6
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ matrix.go_version }}
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -146,8 +148,8 @@ jobs:
           export SERVICE_API_KEY="SUA_CHAVE_DE_SERVICO"
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
-          go run . &
-          for i in 1 2; do sleep 2; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
+          go run . > gorun.log 2>&1 &
+          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -164,20 +166,41 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
-          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app  > gunicorn.log 2>&1 &
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
           for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-      # 5. Security Scan (SAST + SCA)
-      # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
-      - name: SCA - Trivy (vulnerabilidades em dependências)
-        uses: aquasecurity/trivy-action@master
+      # # 5. Security Scan (SAST + SCA)
+      # - name: Install Trivy
+      #   run: |
+      #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.69.3
+      # - name: SCA - Trivy
+      #   run: |
+      #     trivy fs \
+      #       --format table \
+      #       --exit-code 1 \
+      #       --severity CRITICAL \
+      #       --ignore-unfixed \
+      #       ${{ matrix.code_dir }}
+      
+      # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      # - name: SCA - Trivy (vulnerabilidades em dependências)
+      #   uses: aquasecurity/trivy-action@0.35.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     scan-type: 'fs'
+      #     scan-ref: ${{ matrix.code_dir }}
+      #     format: 'table'
+      #     exit-code: '1'
+      #     severity: 'CRITICAL'
+      #     ignore-unfixed: true
+
+      # Usa a imagem Docker diretamente para evitar autenticação no Github
+      - name: SCA - Trivy
+        image: docker.io/aquasecurity/trivy:${{ env.TRIVY_VERSION }}
         with:
-          scan-type: fs
-          scan-ref: ${{ matrix.code_dir }}
-          format: table
-          exit-code: 1
-          severity: CRITICAL
-          ignore-unfixed: true
+        # Os "args" são passados ao entrypoint
+          args: fs --format table --exit-code 1 --severity CRITICAL --ignore-unfixed ${{ matrix.code_dir }}
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
