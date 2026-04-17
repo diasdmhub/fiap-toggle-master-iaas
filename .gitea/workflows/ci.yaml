@@ -193,7 +193,7 @@ jobs:
       - name: SCA - Trivy
         run: |
           ls -lahR ${{ github.workspace }}/${{ matrix.code_dir }}
-          cat trivy-requirements.txt
+          cat ${{ github.workspace }}/${{ matrix.code_dir }}/trivy-requirements.txt
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm --volumes-from $(hostname) docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
