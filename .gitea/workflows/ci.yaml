@@ -15,7 +15,7 @@ permissions:
 env:
   PYTHON_VERSION: "3.14"
   GO_VERSION: "stable"
-  TRIVY_VERSION: "0.69.3"
+  TRIVY_VERSION: "0.70.0"
 
 jobs:
   ci:
@@ -207,6 +207,7 @@ jobs:
           --volumes-from $(hostname) \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
+          --skip-version-check \
           --cache-backend redis://redis:6379 \
           --format table \
           --exit-code 1 \
