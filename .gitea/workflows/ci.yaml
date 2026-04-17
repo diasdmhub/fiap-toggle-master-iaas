@@ -191,12 +191,13 @@ jobs:
           cp -v requirements.txt requirements.txt.bkp
           pip -v freeze > requirements.txt
 
-      # Cache do Trivy DB para evitar multiplos downloads
-      - name: Cache Trivy
-        uses: actions/cache@v5
-        with:
-          path: .trivy-cache
-          key: trivy-db-${{ runner.os }}
+      # # Cache do Trivy DB para evitar multiplos downloads
+      # - name: Cache Trivy
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: .trivy-cache
+      #     key: trivy-db-${{ runner.os }}
+      #          -v $(pwd)/.trivy-cache:/root/.cache/trivy \
 
       # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
@@ -204,9 +205,9 @@ jobs:
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm \
           --volumes-from $(hostname) \
-          -v $(pwd)/.trivy-cache:/root/.cache/trivy \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
+          --cache-backend redis://redis:6379 \
           --format table \
           --exit-code 1 \
           --severity CRITICAL \
