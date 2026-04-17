@@ -199,10 +199,6 @@ jobs:
       #     key: trivy-db-${{ runner.os }}
       #          -v $(pwd)/.trivy-cache:/root/.cache/trivy \
 
-
-      - run: |
-          docker network ls
-          docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
       # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
         run: |
