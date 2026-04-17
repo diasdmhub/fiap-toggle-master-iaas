@@ -175,30 +175,26 @@ jobs:
       #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.69.3
       # - name: SCA - Trivy
       #   run: |
-      #     trivy fs \
-      #       --format table \
-      #       --exit-code 1 \
-      #       --severity CRITICAL \
-      #       --ignore-unfixed \
+      #     trivy fs --debug \
+      #     --format table \
+      #     --exit-code 1 \
+      #     --severity CRITICAL \
+      #     --ignore-unfixed \
       #       ${{ matrix.code_dir }}
       
-      # # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
-      # - name: SCA - Trivy (vulnerabilidades em dependências)
-      #   uses: aquasecurity/trivy-action@0.35.0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     scan-type: 'fs'
-      #     scan-ref: ${{ matrix.code_dir }}
-      #     format: 'table'
-      #     exit-code: '1'
-      #     severity: 'CRITICAL'
-      #     ignore-unfixed: true
+      # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      # Gera um arquivo requirements com as versões fixas para o Trivy
+      - name: Prepara o requirements para o Trivy (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: pip freeze > trivy-requirements.txt
 
       # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
+        working-directory: ${{ matrix.code_dir }}
         run: |
-          ls -R ${{ github.workspace }}/${{ matrix.code_dir }}
+          ls -lahR
+          cat trivy-requirements.txt
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm --volumes-from $(hostname) docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs --debug \
@@ -207,8 +203,7 @@ jobs:
           --severity CRITICAL \
           --ignore-unfixed \
           --vuln-type library \
-          --scanners vuln \
-          ${{ github.workspace }}/${{ matrix.code_dir }}
+          --scanners vuln,secret,config .
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
       # - name: SAST - gosec (Go)
