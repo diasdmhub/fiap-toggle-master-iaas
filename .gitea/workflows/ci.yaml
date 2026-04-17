@@ -197,7 +197,7 @@ jobs:
           cat trivy-requirements.txt
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm --volumes-from $(hostname) docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
-          fs --debug \
+          fs \
           --format table \
           --exit-code 1 \
           --severity CRITICAL \
