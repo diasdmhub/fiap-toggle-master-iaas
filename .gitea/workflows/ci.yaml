@@ -191,6 +191,7 @@ jobs:
           cp -v requirements.txt requirements.txt.bkp
           pip -v freeze > requirements.txt
 
+      # Cache do Trivy DB para evitar multiplos downloads
       - name: Cache Trivy
         uses: actions/cache@v5
         with:
@@ -203,7 +204,7 @@ jobs:
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm \
           --volumes-from $(hostname) \
-          -v ./.trivy-cache:/root/.cache/trivy \
+          -v $(pwd)/.trivy-cache:/root/.cache/trivy \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
           --format table \
