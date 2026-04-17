@@ -188,14 +188,12 @@ jobs:
         if: matrix.language == 'python'
         working-directory: ${{ matrix.code_dir }}
         run: |
-          cp requirements.txt requirements.txt.bkp
-          pip freeze > requirements.txt
+          cp -v requirements.txt requirements.txt.bkp
+          pip -v freeze > requirements.txt
 
       # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       - name: SCA - Trivy
         run: |
-          ls -lahR ${{ github.workspace }}/${{ matrix.code_dir }}
-          cat ${{ github.workspace }}/${{ matrix.code_dir }}/requirements.txt
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm --volumes-from $(hostname) docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
@@ -203,8 +201,8 @@ jobs:
           --exit-code 1 \
           --severity CRITICAL \
           --ignore-unfixed \
-          --vuln-type library \
-          --scanners vuln,config,misconfig \
+          --pkg-types library \
+          --scanners vuln,config \
           ${{ github.workspace }}/${{ matrix.code_dir }}
 
       # # SAST específico por linguagem (não bloqueia automaticamente)
