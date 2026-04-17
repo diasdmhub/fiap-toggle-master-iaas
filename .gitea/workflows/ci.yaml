@@ -207,8 +207,7 @@ jobs:
       - name: SCA - Trivy
         run: |
           # Usa "--volumes-from" para herdar o workdir do runner
-          docker run --rm \
-          --link redis \
+          docker run --name trivy-${{ matrix.service }} --rm \
           --volumes-from $(hostname) \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
