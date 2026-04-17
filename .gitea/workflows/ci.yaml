@@ -204,7 +204,7 @@ jobs:
         run: |
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --rm \
-          --network bridge \
+          --link redis \
           --volumes-from $(hostname) \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
