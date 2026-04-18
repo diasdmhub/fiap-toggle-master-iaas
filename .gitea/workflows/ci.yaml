@@ -186,8 +186,7 @@ jobs:
       # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy fs \
-          --cache-dir /tmp/trivy-cache \
+          trivy --cache-dir /tmp/trivy-cache fs \
           --skip-version-check \
           --disable-telemetry \
           --format table \
