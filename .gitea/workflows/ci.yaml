@@ -95,6 +95,10 @@ jobs:
         ports:
           - 6379:6379
 
+    volume:
+      # Mapeia o diretório temp do runner como cache para o Trivy
+      - /tmp/trivy-cache:/root/.cache/trivy
+
     steps:
       # 1. Checkout
       - name: Checkout code
@@ -204,12 +208,13 @@ jobs:
         run: |
           # Usa "--volumes-from" para herdar o workdir do runner
           docker run --name trivy-${{ matrix.service }} --rm \
-          --volumes-from $(hostname) \
           --network container:$(hostname) \
+          --volumes-from $(hostname) \
+          -v /tmp/trivy-cache:/root/.cache/trivy \
           docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
           fs \
-          --skip-version-check \
           --cache-backend redis://redis:6379 \
+          --skip-version-check \
           --format table \
           --exit-code 1 \
           --severity CRITICAL \
