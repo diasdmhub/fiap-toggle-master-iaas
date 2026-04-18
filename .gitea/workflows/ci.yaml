@@ -18,13 +18,12 @@ env:
   TRIVY_VERSION: "0.70.0"
 
 jobs:
-  ci:
+  tests:
     name: CI - ${{ matrix.service }}
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
-      max-parallel: 1  # Executa 1 job por vez para manter a sequência
       matrix:
         include:
           - service: auth
@@ -91,10 +90,6 @@ jobs:
         ports:
           - 6379:6379
 
-    # volume:
-    #   # Mapeia o diretório temp do runner como cache para o Trivy
-    #   - /tmp/trivy-cache:/root/.cache/trivy
-
     steps:
       # 1. Checkout
       - name: Checkout code
@@ -113,7 +108,7 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      # 3. Linter / Static Analysis
+      # 3. Linter / Análise Estática
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
         uses: golangci/golangci-lint-action@v9
@@ -169,13 +164,12 @@ jobs:
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
           for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-      # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      # 5. SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
       # Fixa as versões do requirements para o Trivy
       - name: Prepara o requirements para o Trivy (Python)
         if: matrix.language == 'python'
         working-directory: ${{ matrix.code_dir }}
         run: |
-          cp -v requirements.txt requirements.txt.bkp
           pip -v freeze > requirements.txt
 
       - name: Cache Trivy DB
@@ -183,10 +177,9 @@ jobs:
         with:
           path: /tmp/trivy-cache
           key: trivy-db-${{ runner.os }}
-          restore-keys: |
-            trivy-db-
+          restore-keys: trivy-db-
 
-      - name: Install Trivy
+      - name: Instalar o Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
           sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
@@ -206,26 +199,7 @@ jobs:
           --scanners vuln \
           "${{ github.workspace }}/${{ matrix.code_dir }}"
 
-      # # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
-      # - name: SCA - Trivy
-      #   run: |
-      #     # Usa "--volumes-from" para herdar o workdir do runner
-      #     docker run --name trivy-${{ matrix.service }} --rm \
-      #     --volumes-from $(hostname) \
-      #     -v /tmp/trivy-cache:/root/.cache/trivy \
-      #     docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
-      #     fs \
-      #     --skip-version-check \
-      #     --disable-telemetry \
-      #     --format table \
-      #     --exit-code 1 \
-      #     --severity CRITICAL \
-      #     --ignore-unfixed \
-      #     --pkg-types library \
-      #     --scanners vuln \
-      #     "${{ github.workspace }}/${{ matrix.code_dir }}"
-
-      # SAST específico por linguagem (não bloqueia automaticamente)
+      # 6. SAST específico por linguagem (não bloqueia automaticamente)
       - name: SAST - gosec (Go)
         if: matrix.language == 'go'
         working-directory: ${{ matrix.code_dir }}
@@ -242,9 +216,113 @@ jobs:
           pip install bandit
           bandit -r . -f txt -s B104
 
-      # # 5. Docker Build + Container Scan + Push para AWS ECR
-      # - name: Setup do Docker Buildx
-      #   uses: docker/setup-buildx-action@v4
+  build:
+    name: Build - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: tests  # Executa após lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: auth
+            language: go
+            dockerfile: build/Dockerfile-auth
+            code_dir: build/auth-service
+            ecr_repo: auth-service
+            go_version: ${{ env.GO_VERSION }}
+            serv_port: 8001
+
+          - service: flag
+            language: python
+            dockerfile: build/Dockerfile-flag
+            code_dir: build/flag-service
+            ecr_repo: flag-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8002
+
+          - service: targeting
+            language: python
+            dockerfile: build/Dockerfile-targeting
+            code_dir: build/targeting-service
+            ecr_repo: targeting-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8003
+
+          - service: evaluation
+            language: go
+            dockerfile: build/Dockerfile-evaluation
+            code_dir: build/evaluation-service
+            ecr_repo: evaluation-service
+            go_version: ${{ env.GO_VERSION }}
+            serv_port: 8004
+
+          - service: analytics
+            language: python
+            dockerfile: build/Dockerfile-analytics
+            code_dir: build/analytics-service
+            ecr_repo: analytics-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8005
+
+    steps:
+      # 1. Checkout
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # 2. Docker Build + Container Scan + Push para AWS ECR
+      - name: Setup do Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build e Push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./build
+          file: ./${{ matrix.dockerfile }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # push: true
+          # # Use your ECR registry and service name
+          # tags: |
+          #   ${{ steps.login-ecr.outputs.registry }}/my-project/${{ matrix.service }}:latest
+          #   ${{ steps.login-ecr.outputs.registry }}/my-project/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: /tmp/trivy-cache
+          key: trivy-db-${{ runner.os }}
+          restore-keys: trivy-db-
+
+      - name: Instalar o Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
+          sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
+
+      # Usa o Trivy diretamente pois não precisa de autenticação no Github
+      - name: SCA - Trivy
+        run: |
+          trivy image \
+          --cache-dir /tmp/trivy-cache \
+          --skip-version-check \
+          --disable-telemetry \
+          --format table \
+          --exit-code 1 \
+          --severity CRITICAL \
+          --ignore-unfixed \
+          --pkg-types library \
+          --scanners vuln \
+          "temp-image:${{ github.sha }}"
+
+      # - name: Container Scan - Trivy (imagem)
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     scan-type: 'image'
+      #     image-ref: 'temp-image:${{ github.sha }}'
+      #     format: 'table'
+      #     exit-code: '1'
+      #     severity: 'CRITICAL'
+      #     ignore-unfixed: 'true'
 
       # - name: Configurar credenciais AWS (OIDC)
       #   uses: aws-actions/configure-aws-credentials@v6
@@ -262,16 +340,6 @@ jobs:
       #       -f ${{ matrix.dockerfile }} \
       #       -t temp-image:${{ github.sha }} \
       #       build
-
-      # - name: Container Scan - Trivy (imagem)
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     scan-type: 'image'
-      #     image-ref: 'temp-image:${{ github.sha }}'
-      #     format: 'table'
-      #     exit-code: '1'
-      #     severity: 'CRITICAL'
-      #     ignore-unfixed: 'true'
 
       # - name: Push Docker image to ECR
       #   run: |
