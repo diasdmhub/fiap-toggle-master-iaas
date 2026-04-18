@@ -19,14 +19,15 @@ env:
 
 jobs:
   ci:
-    name: ${{ matrix.service }} - CI
+    name: CI - ${{ matrix.service }}
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
+      max-parallel: 1  # Executa 1 job por vez para manter a sequência
       matrix:
         include:
-          - service: 01-auth
+          - service: auth
             language: go
             dockerfile: build/Dockerfile-auth
             code_dir: build/auth-service
@@ -34,7 +35,7 @@ jobs:
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8001
 
-          - service: 02-flag
+          - service: flag
             language: python
             dockerfile: build/Dockerfile-flag
             code_dir: build/flag-service
@@ -42,7 +43,7 @@ jobs:
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8002
 
-          - service: 03-targeting
+          - service: targeting
             language: python
             dockerfile: build/Dockerfile-targeting
             code_dir: build/targeting-service
@@ -50,7 +51,7 @@ jobs:
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8003
 
-          - service: 04-evaluation
+          - service: evaluation
             language: go
             dockerfile: build/Dockerfile-evaluation
             code_dir: build/evaluation-service
@@ -58,7 +59,7 @@ jobs:
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8004
 
-          - service: 05-analytics
+          - service: analytics
             language: python
             dockerfile: build/Dockerfile-analytics
             code_dir: build/analytics-service
