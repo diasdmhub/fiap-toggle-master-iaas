@@ -183,11 +183,13 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
           sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
 
+      # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy fs \
-          --cache-backend redis://redis:6379 \
+          trivy fs -q \
+          --cache-dir /tmp/trivy-cache \
           --skip-version-check \
+          --disable-telemetry \
           --format table \
           --exit-code 1 \
           --severity CRITICAL \
@@ -206,6 +208,7 @@ jobs:
       #     docker.io/aquasec/trivy:${{ env.TRIVY_VERSION }} \
       #     fs \
       #     --skip-version-check \
+      #     --disable-telemetry \
       #     --format table \
       #     --exit-code 1 \
       #     --severity CRITICAL \
