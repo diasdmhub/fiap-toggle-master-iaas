@@ -173,19 +173,6 @@ jobs:
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
           for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-      # # 5. Security Scan (SAST + SCA)
-      # - name: Install Trivy
-      #   run: |
-      #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.69.3
-      # - name: SCA - Trivy
-      #   run: |
-      #     trivy fs --debug \
-      #     --format table \
-      #     --exit-code 1 \
-      #     --severity CRITICAL \
-      #     --ignore-unfixed \
-      #       ${{ matrix.code_dir }}
-      
       # SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
       # Fixa as versões do requirements para o Trivy
       - name: Prepara o requirements para o Trivy (Python)
@@ -212,16 +199,14 @@ jobs:
           --pkg-types library \
           --scanners vuln \
           ${{ github.workspace }}/${{ matrix.code_dir }}
-#          --network container:$(hostname) \
-#          --cache-backend redis://redis:6379 \
 
-      # # SAST específico por linguagem (não bloqueia automaticamente)
-      # - name: SAST - gosec (Go)
-      #   if: matrix.language == 'go'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     go install github.com/securego/gosec/v2/cmd/gosec@latest
-      #     gosec -quiet ./...
+      # SAST específico por linguagem (não bloqueia automaticamente)
+      - name: SAST - gosec (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        uses: securego/gosec@master
+        with:
+          args: ./...
 
       # - name: SAST - bandit (Python)
       #   if: matrix.language == 'python'
