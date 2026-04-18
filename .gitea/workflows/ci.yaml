@@ -186,7 +186,7 @@ jobs:
       # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy --debug --cache-dir /tmp/trivy-cache \
+          trivy fs --debug --cache-dir /tmp/trivy-cache \
           --skip-version-check \
           --disable-telemetry \
           --format table \
@@ -195,7 +195,7 @@ jobs:
           --ignore-unfixed \
           --pkg-types library \
           --scanners vuln \
-          fs "${{ github.workspace }}/${{ matrix.code_dir }}"
+          "${{ github.workspace }}/${{ matrix.code_dir }}"
 
       # # Usa a imagem Docker diretamente para evitar falha de autenticação na action do Trivy
       # - name: SCA - Trivy
