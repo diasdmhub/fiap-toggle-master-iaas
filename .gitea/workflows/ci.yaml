@@ -26,47 +26,42 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - service: auth
+          - service: 01-auth
             language: go
             dockerfile: build/Dockerfile-auth
             code_dir: build/auth-service
-            docker_context: build
             ecr_repo: auth-service
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8001
 
-          - service: flag
+          - service: 02-flag
             language: python
             dockerfile: build/Dockerfile-flag
             code_dir: build/flag-service
-            docker_context: build
             ecr_repo: flag-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8002
 
-          - service: targeting
+          - service: 03-targeting
             language: python
             dockerfile: build/Dockerfile-targeting
             code_dir: build/targeting-service
-            docker_context: build
             ecr_repo: targeting-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8003
 
-          - service: evaluation
+          - service: 04-evaluation
             language: go
             dockerfile: build/Dockerfile-evaluation
             code_dir: build/evaluation-service
-            docker_context: build
             ecr_repo: evaluation-service
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8004
 
-          - service: analytics
+          - service: 05-analytics
             language: python
             dockerfile: build/Dockerfile-analytics
             code_dir: build/analytics-service
-            docker_context: build
             ecr_repo: analytics-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8005
@@ -217,14 +212,6 @@ jobs:
           pip install bandit
           bandit -r . -f txt -s B104
 
-      # - name: SAST - bandit (Python)
-      #   if: matrix.language == 'python'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   continue-on-error: true
-      #   uses: PyCQA/bandit-action@main
-      #   with:
-      #     python-version: ${{ matrix.python_version }}
-
       # # 5. Docker Build + Container Scan + Push para AWS ECR
       # - name: Setup do Docker Buildx
       #   uses: docker/setup-buildx-action@v4
@@ -244,7 +231,7 @@ jobs:
       #     docker build \
       #       -f ${{ matrix.dockerfile }} \
       #       -t temp-image:${{ github.sha }} \
-      #       ${{ matrix.docker_context }}
+      #       build
 
       # - name: Container Scan - Trivy (imagem)
       #   uses: aquasecurity/trivy-action@master
