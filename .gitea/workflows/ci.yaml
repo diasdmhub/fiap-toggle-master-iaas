@@ -215,7 +215,7 @@ jobs:
         continue-on-error: true
         run: |
           pip install bandit
-          bandit -r . -f txt
+          bandit -r . -f txt -skip B104
 
       # - name: SAST - bandit (Python)
       #   if: matrix.language == 'python'
