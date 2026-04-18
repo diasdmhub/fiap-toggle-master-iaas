@@ -204,16 +204,18 @@ jobs:
       - name: SAST - gosec (Go)
         if: matrix.language == 'go'
         working-directory: ${{ matrix.code_dir }}
+        continue-on-error: true
         uses: securego/gosec@master
         with:
           args: ./...
 
-      # - name: SAST - bandit (Python)
-      #   if: matrix.language == 'python'
-      #   working-directory: ${{ matrix.code_dir }}
-      #   run: |
-      #     pip install bandit
-      #     bandit -r . -q
+      - name: SAST - bandit (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        continue-on-error: true
+        uses: PyCQA/bandit-action@main
+          with:
+            python-version: ${{ matrix.python_version }}
 
       # # 5. Docker Build + Container Scan + Push para AWS ECR
       # - name: Setup do Docker Buildx
