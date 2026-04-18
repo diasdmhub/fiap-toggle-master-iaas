@@ -19,7 +19,7 @@ env:
 
 jobs:
   ci:
-    name: CI - ${{ matrix.service }}
+    name: ${{ matrix.service }} - CI
     runs-on: ubuntu-latest
 
     strategy:
