@@ -91,9 +91,9 @@ jobs:
         ports:
           - 6379:6379
 
-    volume:
-      # Mapeia o diretório temp do runner como cache para o Trivy
-      - /tmp/trivy-cache:/root/.cache/trivy
+    # volume:
+    #   # Mapeia o diretório temp do runner como cache para o Trivy
+    #   - /tmp/trivy-cache:/root/.cache/trivy
 
     steps:
       # 1. Checkout
@@ -194,7 +194,8 @@ jobs:
       # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy fs --debug --cache-dir /tmp/trivy-cache \
+          trivy fs \
+          --cache-dir /tmp/trivy-cache \
           --skip-version-check \
           --disable-telemetry \
           --format table \
