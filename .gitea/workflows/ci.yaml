@@ -214,8 +214,8 @@ jobs:
         working-directory: ${{ matrix.code_dir }}
         continue-on-error: true
         uses: PyCQA/bandit-action@main
-          with:
-            python-version: ${{ matrix.python_version }}
+        with:
+          python-version: ${{ matrix.python_version }}
 
       # # 5. Docker Build + Container Scan + Push para AWS ECR
       # - name: Setup do Docker Buildx
