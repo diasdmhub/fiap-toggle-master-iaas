@@ -19,7 +19,7 @@ env:
 
 jobs:
   tests:
-    name: CI - ${{ matrix.service }}
+    name: CI Tests - ${{ matrix.service }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -187,7 +187,7 @@ jobs:
       # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy fs --debug \
+          trivy fs \
           --cache-dir ~/.cache/trivy \
           --skip-version-check \
           --disable-telemetry \
@@ -226,44 +226,24 @@ jobs:
       matrix:
         include:
           - service: auth
-            language: go
             dockerfile: build/Dockerfile-auth
-            code_dir: build/auth-service
             ecr_repo: auth-service
-            go_version: ${{ env.GO_VERSION }}
-            serv_port: 8001
 
           - service: flag
-            language: python
             dockerfile: build/Dockerfile-flag
-            code_dir: build/flag-service
             ecr_repo: flag-service
-            python_version: ${{ env.PYTHON_VERSION }}
-            serv_port: 8002
 
           - service: targeting
-            language: python
             dockerfile: build/Dockerfile-targeting
-            code_dir: build/targeting-service
             ecr_repo: targeting-service
-            python_version: ${{ env.PYTHON_VERSION }}
-            serv_port: 8003
 
           - service: evaluation
-            language: go
             dockerfile: build/Dockerfile-evaluation
-            code_dir: build/evaluation-service
             ecr_repo: evaluation-service
-            go_version: ${{ env.GO_VERSION }}
-            serv_port: 8004
 
           - service: analytics
-            language: python
             dockerfile: build/Dockerfile-analytics
-            code_dir: build/analytics-service
             ecr_repo: analytics-service
-            python_version: ${{ env.PYTHON_VERSION }}
-            serv_port: 8005
 
     steps:
       # 1. Checkout
@@ -283,11 +263,7 @@ jobs:
           cache-to: type=gha,mode=max
           load: true
           tags: ${{ matrix.service }}-service:${{ github.sha }}
-          # push: true
-          # # Use your ECR registry and service name
-          # tags: |
-          #   ${{ steps.login-ecr.outputs.registry }}/my-project/${{ matrix.service }}:latest
-          #   ${{ steps.login-ecr.outputs.registry }}/my-project/${{ matrix.service }}:${{ github.sha }}
+          push: false
 
       - name: Cache Trivy DB
         uses: actions/cache@v5
