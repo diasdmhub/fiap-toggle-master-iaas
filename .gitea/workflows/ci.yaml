@@ -179,7 +179,7 @@ jobs:
           key: trivy-db-${{ runner.os }}
           restore-keys: trivy-db-
 
-      - name: Instalar o Trivy
+      - name: Setup Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
           sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
@@ -281,6 +281,8 @@ jobs:
           file: ./${{ matrix.dockerfile }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
+          tags: temp-image:${{ github.sha }}
           # push: true
           # # Use your ECR registry and service name
           # tags: |
@@ -294,7 +296,7 @@ jobs:
           key: trivy-db-${{ runner.os }}
           restore-keys: trivy-db-
 
-      - name: Instalar o Trivy
+      - name: Setup Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
           sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
