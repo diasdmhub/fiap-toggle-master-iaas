@@ -177,7 +177,8 @@ jobs:
         with:
           path: /tmp/trivy-cache
           key: trivy-db-${{ runner.os }}
-          restore-keys: trivy-db-
+          restore-keys: |
+            trivy-db-
 
       - name: Setup Trivy
         run: |
@@ -294,7 +295,8 @@ jobs:
         with:
           path: /tmp/trivy-cache
           key: trivy-db-${{ runner.os }}
-          restore-keys: trivy-db-
+          restore-keys: |
+            trivy-db-
 
       - name: Setup Trivy
         run: |
