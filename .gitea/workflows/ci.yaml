@@ -274,7 +274,7 @@ jobs:
       - name: Setup do Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build e Push
+      - name: Build - ${{ matrix.service }}-service
         uses: docker/build-push-action@v7
         with:
           context: ./build
@@ -318,7 +318,7 @@ jobs:
           "${{ matrix.service }}-service:${{ github.sha }}"
 
       # # Push para o ECR
-      # - name: Push Image to ECR
+      # - name: Push ECR - ${{ matrix.service }}-service
       #   uses: docker/build-push-action@v7
       #   with:
       #     context: ./build
@@ -328,16 +328,6 @@ jobs:
       #     tags: |
       #       ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:latest
       #       ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:${{ github.sha }}
-
-      # - name: Container Scan - Trivy (imagem)
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     scan-type: 'image'
-      #     image-ref: 'temp-image:${{ github.sha }}'
-      #     format: 'table'
-      #     exit-code: '1'
-      #     severity: 'CRITICAL'
-      #     ignore-unfixed: 'true'
 
       # - name: Configurar credenciais AWS (OIDC)
       #   uses: aws-actions/configure-aws-credentials@v6
