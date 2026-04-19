@@ -169,8 +169,7 @@ jobs:
       - name: Prepara o requirements para o Trivy (Python)
         if: matrix.language == 'python'
         working-directory: ${{ matrix.code_dir }}
-        run: |
-          pip -v freeze > requirements.txt
+        run: pip -v freeze > requirements.txt
 
       - name: Cache Trivy DB
         uses: actions/cache@v5
@@ -188,7 +187,7 @@ jobs:
       # Usa o Trivy diretamente pois não precisa de autenticação no Github
       - name: SCA - Trivy
         run: |
-          trivy fs \
+          trivy fs --debug \
           --cache-dir /tmp/trivy-cache \
           --skip-version-check \
           --disable-telemetry \
@@ -283,7 +282,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
-          tags: temp-image:${{ github.sha }}
+          tags: ${{ matrix.service }}-service:${{ github.sha }}
           # push: true
           # # Use your ECR registry and service name
           # tags: |
@@ -316,7 +315,19 @@ jobs:
           --ignore-unfixed \
           --pkg-types library \
           --scanners vuln \
-          "temp-image:${{ github.sha }}"
+          "${{ matrix.service }}-service:${{ github.sha }}"
+
+      # # Push para o ECR
+      # - name: Push Image to ECR
+      #   uses: docker/build-push-action@v7
+      #   with:
+      #     context: ./build
+      #     file: ./${{ matrix.dockerfile }}
+      #     push: true
+      #     cache-from: type=gha
+      #     tags: |
+      #       ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:latest
+      #       ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:${{ github.sha }}
 
       # - name: Container Scan - Trivy (imagem)
       #   uses: aquasecurity/trivy-action@master
