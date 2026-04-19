@@ -5,7 +5,6 @@ WORKDIR /src
 # Copia somente os arquivos necessários - Esta etapa é incluída no cache
 COPY ./evaluation-service/evaluator.go \
      ./evaluation-service/go.mod \
-     ./evaluation-service/go.sum \
      ./evaluation-service/handlers.go \
      ./evaluation-service/main.go \
      ./evaluation-service/sqs.go \

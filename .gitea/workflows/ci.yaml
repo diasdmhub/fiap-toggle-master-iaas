@@ -250,11 +250,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # 2. Docker Build + Container Scan + Push para AWS ECR
+      # 2. Docker Build
       - name: Setup do Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build - ${{ matrix.service }}-service
+      - name: Build do microserviço
         uses: docker/build-push-action@v7
         with:
           context: ./build
@@ -265,6 +265,7 @@ jobs:
           tags: ${{ matrix.service }}-service:${{ github.sha }}
           push: false
 
+      # 3. Container image scan
       - name: Cache Trivy DB
         uses: actions/cache@v5
         with:
@@ -293,7 +294,7 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      # # Push para o ECR
+      # # 4. Push para o AWS ECR
       # - name: Push ECR - ${{ matrix.service }}-service
       #   uses: docker/build-push-action@v7
       #   with:
@@ -314,13 +315,6 @@ jobs:
       # - name: Login no Amazon ECR
       #   id: login-ecr
       #   uses: aws-actions/amazon-ecr-login@v2
-
-      # - name: Build da imagem Docker
-      #   run: |
-      #     docker build \
-      #       -f ${{ matrix.dockerfile }} \
-      #       -t temp-image:${{ github.sha }} \
-      #       build
 
       # - name: Push Docker image to ECR
       #   run: |
