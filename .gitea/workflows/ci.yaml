@@ -294,6 +294,8 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
+      - run: echo "${{ github.run_number }}-${SHORT_SHA}"
+
       # # 4. Push para o AWS ECR
       # - name: Push ECR - ${{ matrix.service }}-service
       #   uses: docker/build-push-action@v7
