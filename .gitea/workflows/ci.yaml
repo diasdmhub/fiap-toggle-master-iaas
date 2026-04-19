@@ -171,21 +171,13 @@ jobs:
         working-directory: ${{ matrix.code_dir }}
         run: pip -v freeze > requirements.txt
 
-      - name: List pre
-        continue-on-error: true
-        run: ls -lah . ; ls -lah ~ ; ls -lah ~/.cache/trivy
-
       - name: Cache Trivy DB
         uses: actions/cache@v5
         with:
-          path: /tmp/trivy-cache
-          key: trivy-db-${{ runner.os }}
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
           restore-keys: |
             trivy-db-
-
-      - name: List pos cache
-        continue-on-error: true
-        run: ls -lah /tmp/trivy-cache ; ls -lah . ; ls -lah ~ ; ls -lah ~/.cache/trivy
 
       - name: Setup Trivy
         run: |
@@ -196,7 +188,7 @@ jobs:
       - name: SCA - Trivy
         run: |
           trivy fs --debug \
-          --cache-dir /tmp/trivy-cache \
+          --cache-dir ~/.cache/trivy \
           --skip-version-check \
           --disable-telemetry \
           --format table \
@@ -206,10 +198,6 @@ jobs:
           --pkg-types library \
           --scanners vuln \
           "${{ github.workspace }}/${{ matrix.code_dir }}"
-
-      - name: List pos trivy
-        continue-on-error: true
-        run: ls -lah /tmp/trivy-cache ; ls -lah . ; ls -lah ~ ; ls -lah ~/.cache/trivy
 
       # 6. SAST específico por linguagem (não bloqueia automaticamente)
       - name: SAST - gosec (Go)
@@ -304,8 +292,8 @@ jobs:
       - name: Cache Trivy DB
         uses: actions/cache@v5
         with:
-          path: /tmp/trivy-cache
-          key: trivy-db-${{ runner.os }}
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
           restore-keys: |
             trivy-db-
 
@@ -318,7 +306,7 @@ jobs:
       - name: SCA - Trivy
         run: |
           trivy image \
-          --cache-dir /tmp/trivy-cache \
+          --cache-dir ~/.cache/trivy \
           --skip-version-check \
           --disable-telemetry \
           --format table \
