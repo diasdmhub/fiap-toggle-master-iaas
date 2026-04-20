@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  TAG_VERSION: "1.0"
+  TAG_VERSION: "1.0.0"
   PYTHON_VERSION: "3.14"
   GO_VERSION: "stable"
   TRIVY_VERSION: "0.70.0"
@@ -31,7 +31,6 @@ jobs:
             language: go
             dockerfile: build/Dockerfile-auth
             code_dir: build/auth-service
-            ecr_repo: auth-service
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8001
 
@@ -39,7 +38,6 @@ jobs:
             language: python
             dockerfile: build/Dockerfile-flag
             code_dir: build/flag-service
-            ecr_repo: flag-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8002
 
@@ -47,7 +45,6 @@ jobs:
             language: python
             dockerfile: build/Dockerfile-targeting
             code_dir: build/targeting-service
-            ecr_repo: targeting-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8003
 
@@ -55,7 +52,6 @@ jobs:
             language: go
             dockerfile: build/Dockerfile-evaluation
             code_dir: build/evaluation-service
-            ecr_repo: evaluation-service
             go_version: ${{ env.GO_VERSION }}
             serv_port: 8004
 
@@ -63,7 +59,6 @@ jobs:
             language: python
             dockerfile: build/Dockerfile-analytics
             code_dir: build/analytics-service
-            ecr_repo: analytics-service
             python_version: ${{ env.PYTHON_VERSION }}
             serv_port: 8005
 
@@ -73,9 +68,9 @@ jobs:
         image: docker.io/library/postgres:18-alpine
         container_name: psql
         env:
-          POSTGRES_USER: toggle  # ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: toggle  # ${{ secrets.POSTGRES_PASS }}
-          POSTGRES_DB: toggle  # ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASS }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         ports:
           - 5432:5432
         volumes:
@@ -298,14 +293,15 @@ jobs:
 
       - name: Tag version
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          echo "Tag = v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+          echo "Tag = v${{ env.TAG_VERSION }}-${{ github.sha[:7] }}"
 
       - name: Configurar credenciais AWS (OIDC)
+        id: login-ecr
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
+          mask-aws-account-id: true
 
       # 4. Push para o AWS ECR
       - name: Push ECR - ${{ matrix.service }}-service
@@ -316,8 +312,8 @@ jobs:
           push: true
           cache-from: type=gha
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:latest
-            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.service }}-service:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ github.sha[:7] }}
 
       # - name: Login no Amazon ECR
       #   id: login-ecr
