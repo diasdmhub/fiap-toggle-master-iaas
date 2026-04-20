@@ -216,7 +216,7 @@ jobs:
         continue-on-error: true
         run: |
           pip install bandit
-          bandit -r -lll -iii -f txt -s B104
+          bandit -q -lll -iii -f txt -s B104 -r .
 
   build:
     name: Build - ${{ matrix.service }}
