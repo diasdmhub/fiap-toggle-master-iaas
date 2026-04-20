@@ -298,8 +298,8 @@ jobs:
 
       - name: Tag version
         run: |
-        SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-        echo "Tag = v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "Tag = v${{ env.TAG_VERSION }}-${SHORT_SHA}"
 
       - name: Configurar credenciais AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
