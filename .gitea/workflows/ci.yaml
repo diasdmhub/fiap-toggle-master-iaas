@@ -294,7 +294,7 @@ jobs:
       - name: Inclui tag curta
         run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-      # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
+      # # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
       # - name: Configurar credenciais AWS (OIDC)
       #   id: login-ecr
       #   uses: aws-actions/configure-aws-credentials@v6
@@ -303,7 +303,7 @@ jobs:
       #     aws-region: ${{ secrets.AWS_REGION }}
       #     mask-aws-account-id: true
 
-      # Acesso com Access Key para instâncias self-hosted
+      # Acesso com Access Key para instâncias self-hosted isoladas
       - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -315,25 +315,20 @@ jobs:
       - name: Login no AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          mask-password: "false"
-
-      - name: Debug ECR registry output
-        run: echo "Registry = [${{ steps.login-ecr.outputs.registry }}]"
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
         uses: docker/build-push-action@v7
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
         with:
           context: ./build
           file: ./${{ matrix.dockerfile }}
           push: true
           cache-from: type=gha
-          tags: |
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+          tags:
+            - ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+            - ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
