@@ -293,9 +293,11 @@ jobs:
 
       - name: Tag version
         run: |
-          echo "Tag = v${{ env.TAG_VERSION }}-${{ github.sha[:7] }}"
+          echo "${GITHUB_SHA::7}"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "Tag = v${{ env.TAG_VERSION }}-${SHORT_SHA}"
 
-      # OIDC indisponível para instâncias self-hosted
+      # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
       # - name: Configurar credenciais AWS (OIDC)
       #   id: login-ecr
       #   uses: aws-actions/configure-aws-credentials@v6
@@ -327,11 +329,7 @@ jobs:
           cache-from: type=gha
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ github.sha[:7] }}
-
-      # - name: Login no Amazon ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
+            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
