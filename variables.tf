@@ -68,6 +68,13 @@ variable "git_url" {
   default     = "https://token.actions.githubusercontent.com"
 }
 
+# Set the thumbprint before running
+variable "git_thumbprint" {
+  description = "git issuer hash SHA-1 thumbprint do OIDC provider"
+  type        = string
+  default     = "12345678901234567890123456789012345678"
+}
+
 variable "git_org" {
   description = "git account"
   type        = string
