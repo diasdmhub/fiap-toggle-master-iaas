@@ -77,5 +77,5 @@ variable "git_org" {
 variable "git_repo" {
   description = "git repository"
   type        = string
-  default     = "repo_name"
+  default     = "fiap-toggle-master-iaas"
 }

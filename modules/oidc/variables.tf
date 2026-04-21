@@ -3,11 +3,9 @@ variable "name_prefix" {
   type        = string
 }
 
-# URL defaults to GitHub
 variable "git_url" {
   description = "git issuer URL"
   type        = string
-  default     = "https://token.actions.githubusercontent.com"
 }
 
 variable "git_org" {
