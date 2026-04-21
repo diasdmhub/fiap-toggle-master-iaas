@@ -291,7 +291,7 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      - name: Set tag curta
+      - name: Inclui tag curta
         run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
@@ -304,7 +304,7 @@ jobs:
       #     mask-aws-account-id: true
 
       # Acesso com Access Key para instâncias self-hosted
-      - name: Configurar credenciais AWS (OIDC)
+      - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -317,6 +317,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
         with:
           mask-password: "true"
+
+      - name: Debug ECR registry output
+        run: echo "Registry = [${{ steps.login-ecr.outputs.registry }}]"
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
