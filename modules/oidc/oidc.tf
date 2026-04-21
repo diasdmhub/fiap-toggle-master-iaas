@@ -1,6 +1,6 @@
 # OIDC Identity Provider
 resource "aws_iam_openid_connect_provider" "git" {
-  url             = "https://token.actions.githubusercontent.com"
+  url             = "${var.git_url}"
   client_id_list  = ["sts.amazonaws.com"]
 }
 
