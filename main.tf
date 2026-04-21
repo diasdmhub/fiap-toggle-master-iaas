@@ -67,6 +67,7 @@ module "oidc" {
   source = "./modules/oidc"
 
   name_prefix = var.name_prefix
+  git_url     = var.git_url
   git_org     = var.git_org
   git_repo    = var.git_repo
 }
