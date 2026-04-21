@@ -4,15 +4,10 @@ variable "name_prefix" {
 }
 
 # URL defaults to GitHub
-variable "git_url" {
-  description = "git issuer URL"
+variable "git_domain" {
+  description = "git issuer domain"
   type        = string
-  default     = "https://token.actions.githubusercontent.com"
-}
-
-variable "git_thumbprint" {
-  description = "git issuer thumbprint"
-  type        = string
+  default     = "token.actions.githubusercontent.com"
 }
 
 variable "git_org" {

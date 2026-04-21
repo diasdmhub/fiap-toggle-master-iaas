@@ -62,17 +62,10 @@ variable "db_password" {
 # Variáveis do CI git
 #############################
 # URL defaults to GitHub
-variable "git_url" {
-  description = "git issuer URL"
+variable "git_domain" {
+  description = "git issuer domain"
   type        = string
-  default     = "https://token.actions.githubusercontent.com"
-}
-
-# Set the thumbprint before running
-variable "git_thumbprint" {
-  description = "git issuer hash SHA-1 thumbprint do OIDC provider"
-  type        = string
-  default     = "12345678901234567890123456789012345678"
+  default     = "token.actions.githubusercontent.com"
 }
 
 variable "git_org" {

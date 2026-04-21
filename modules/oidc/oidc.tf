@@ -1,8 +1,7 @@
 # OIDC Identity Provider
 resource "aws_iam_openid_connect_provider" "git" {
-  url             = "${var.git_url}"
+  url             = "https://${var.git_domain}"
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["${var.git_thumbprint}"]
 }
 
 # IAM Role
@@ -19,8 +18,8 @@ resource "aws_iam_role" "git_actions" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.git_org}/${var.git_repo}:ref:refs/heads/${var.git_branch}"
+            "${var.git_domain}:aud" = "sts.amazonaws.com"
+            "${var.git_domain}:sub" = "repo:${var.git_org}/${var.git_repo}:ref:refs/heads/${var.git_branch}"
           }
         }
       }
