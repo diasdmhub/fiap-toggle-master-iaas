@@ -40,6 +40,7 @@ variable "private_subnet_nums" {
 
 # Variáveis do RDS
 #############################
+# DEFINA AS CREDENCIAIS DO DB AQUI
 variable "db_name" {
   description = "Nome do banco de dados inicial no RDS"
   type        = string

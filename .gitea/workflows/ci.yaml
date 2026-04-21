@@ -295,13 +295,27 @@ jobs:
         run: |
           echo "Tag = v${{ env.TAG_VERSION }}-${{ github.sha[:7] }}"
 
+      # OIDC indisponível para instâncias self-hosted
+      # - name: Configurar credenciais AWS (OIDC)
+      #   id: login-ecr
+      #   uses: aws-actions/configure-aws-credentials@v6
+      #   with:
+      #     role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+      #     mask-aws-account-id: true
+
+      # Acesso com Access Key para instâncias self-hosted
       - name: Configurar credenciais AWS (OIDC)
-        id: login-ecr
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          mask-aws-account-id: true
+
+      # Login no AWS ECR
+      - name: Login no AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
