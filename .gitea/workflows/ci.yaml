@@ -326,9 +326,9 @@ jobs:
           file: ./${{ matrix.dockerfile }}
           push: true
           cache-from: type=gha
-          tags:
-            - ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            - ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+          tags: |
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
