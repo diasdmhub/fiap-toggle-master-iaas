@@ -291,11 +291,8 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      - name: Tag version
-        run: |
-          echo "${GITHUB_SHA::7}"
-          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
-          echo "Tag = v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+      - name: Set tag curta
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
       # - name: Configurar credenciais AWS (OIDC)
@@ -318,18 +315,22 @@ jobs:
       - name: Login no AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: "true"
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
         uses: docker/build-push-action@v7
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           context: ./build
           file: ./${{ matrix.dockerfile }}
           push: true
           cache-from: type=gha
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ steps.login-ecr.outputs.registry }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
