@@ -258,8 +258,8 @@ jobs:
         with:
           context: ./build
           file: ./${{ matrix.dockerfile }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache,mode=max,image-manifest=true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           load: true
           tags: ${{ matrix.service }}-service:${{ github.sha }}
           push: false
@@ -340,8 +340,7 @@ jobs:
           context: ./build
           file: ./${{ matrix.dockerfile }}
           push: true
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache,mode=max,image-manifest=true
+          cache-from: type=gha
           tags: |
             ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
             ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
