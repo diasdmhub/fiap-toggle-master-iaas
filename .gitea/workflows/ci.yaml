@@ -318,17 +318,27 @@ jobs:
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
-        uses: docker/build-push-action@v7
         env:
           REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        with:
-          context: ./build
-          file: ./${{ matrix.dockerfile }}
-          push: true
-          cache-from: type=gha
-          tags: |
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+        run: |
+          docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+          docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+          docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+          docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+
+      # # 4. Push para o AWS ECR
+      # - name: Push do microserviço ao ECR
+      #   uses: docker/build-push-action@v7
+      #   env:
+      #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      #   with:
+      #     context: ./build
+      #     file: ./${{ matrix.dockerfile }}
+      #     push: true
+      #     cache-from: type=gha
+      #     tags: |
+      #       ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+      #       ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
