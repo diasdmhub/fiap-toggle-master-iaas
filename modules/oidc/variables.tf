@@ -3,6 +3,13 @@ variable "name_prefix" {
   type        = string
 }
 
+# URL defaults to GitHub
+variable "git_domain" {
+  description = "git issuer domain"
+  type        = string
+  default     = "token.actions.githubusercontent.com"
+}
+
 variable "git_org" {
   description = "git account"
   type        = string

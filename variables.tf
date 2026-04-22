@@ -40,6 +40,7 @@ variable "private_subnet_nums" {
 
 # Variáveis do RDS
 #############################
+# DEFINA AS CREDENCIAIS DO DB AQUI
 variable "db_name" {
   description = "Nome do banco de dados inicial no RDS"
   type        = string
@@ -61,6 +62,13 @@ variable "db_password" {
 
 # Variáveis do CI git
 #############################
+# URL defaults to GitHub
+variable "git_domain" {
+  description = "git issuer domain"
+  type        = string
+  default     = "token.actions.githubusercontent.com"
+}
+
 variable "git_org" {
   description = "git account"
   type        = string
@@ -70,5 +78,5 @@ variable "git_org" {
 variable "git_repo" {
   description = "git repository"
   type        = string
-  default     = "repo_name"
+  default     = "fiap-toggle-master-iaas"
 }

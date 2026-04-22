@@ -37,7 +37,7 @@ aws dynamodb create-table \
 terraform init -reconfigure
 
 # 4 Plan do Terraform
-terraform plan
+#terraform plan
 
 # 5 Apply do Terraform
-terraform apply
+#terraform apply
