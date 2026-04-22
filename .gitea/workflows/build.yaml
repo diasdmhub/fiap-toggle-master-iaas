@@ -250,6 +250,8 @@ jobs:
       # 2. Docker Build
       - name: Setup do Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver: docker
 
       - name: Build do microserviço
         uses: docker/build-push-action@v7
@@ -335,7 +337,6 @@ jobs:
         env:
           REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
         with:
-          driver: docker
           context: ./build
           file: ./${{ matrix.dockerfile }}
           push: true
