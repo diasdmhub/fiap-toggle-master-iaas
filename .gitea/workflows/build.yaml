@@ -258,8 +258,8 @@ jobs:
         with:
           context: ./build
           file: ./${{ matrix.dockerfile }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache,mode=max,image-manifest=true
           load: true
           tags: ${{ matrix.service }}-service:${{ github.sha }}
           push: false
@@ -293,8 +293,8 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      # - name: Inclui tag curta
-      #   run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Inclui tag curta
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       # # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
       # - name: Configurar credenciais AWS (OIDC)
@@ -340,7 +340,8 @@ jobs:
           context: ./build
           file: ./${{ matrix.dockerfile }}
           push: true
-          cache-from: type=gha
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:cache,mode=max,image-manifest=true
           tags: |
             ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
             ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
