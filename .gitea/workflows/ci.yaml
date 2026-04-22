@@ -311,43 +311,38 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # # Login no AWS ECR
-      # - name: Login no AWS ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
-
-      # Login no AWS ECR para instâncias self-hosted isoladas
+      # Login no AWS ECR
       - name: Login no AWS ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ secrets.AWS_ACC_ID }}.dkr.ecr.us-east-1.amazonaws.com
-
-      # 4. Push para o AWS ECR
-      - name: Push do microserviço ao ECR
-        env:
-          REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
-          docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-          fi
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       # # 4. Push para o AWS ECR
       # - name: Push do microserviço ao ECR
-      #   uses: docker/build-push-action@v7
       #   env:
       #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-      #   with:
-      #     context: ./build
-      #     file: ./${{ matrix.dockerfile }}
-      #     push: true
-      #     cache-from: type=gha
-      #     tags: |
-      #       ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-      #       ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+      #   run: |
+      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+      #     docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+      #     docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+      #       docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+      #       docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+      #     fi
+
+      # 4. Push para o AWS ECR
+      - name: Push do microserviço ao ECR
+        uses: docker/build-push-action@v7
+        env:
+          REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        with:
+          driver: docker
+          context: ./build
+          file: ./${{ matrix.dockerfile }}
+          push: true
+          cache-from: type=gha
+          tags: |
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
