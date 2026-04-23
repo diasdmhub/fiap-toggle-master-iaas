@@ -317,8 +317,6 @@ jobs:
       - name: Login no AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          mask-password: 'false'
 
       # # 4. Push para o AWS ECR
       # - name: Push do microserviço ao ECR
@@ -344,8 +342,8 @@ jobs:
           push: true
           cache-from: type=gha
           tags: |
-            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
             ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
 
       # - name: Push Docker image to ECR
       #   run: |
