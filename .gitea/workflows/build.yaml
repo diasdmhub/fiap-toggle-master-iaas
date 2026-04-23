@@ -1,8 +1,8 @@
 name: ToggleMaster Microservices - CI Pipeline
 
 on:
-  # push:
-  #   branches: [ main ]
+  push:
+    branches: [ dev ]
   # pull_request:
   #   branches: [ main ]
   workflow_dispatch:
@@ -332,11 +332,11 @@ jobs:
       #       docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
       #     fi
 
-      # # Login no AWS ECR
-      #  Não funcional fora do GitHub
-      # - name: Login no AWS ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
+      # Login no AWS ECR
+       Não funcional fora do GitHub
+      - name: Login no AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Debug Docker auth
         continue-on-error: true
