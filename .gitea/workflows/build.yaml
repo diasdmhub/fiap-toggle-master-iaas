@@ -2,9 +2,13 @@ name: ToggleMaster Microservices - CI Pipeline
 
 on:
   push:
-    branches: [ dev ]
-  # pull_request:
-  #   branches: [ main ]
+    branches: [ main ]
+    paths:
+      - build/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - build/**
   workflow_dispatch:
 
 # Permissões para OIDC
