@@ -12,8 +12,8 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 - Copie o código-fonte do repositório. Recomenda-se **clonar o repositório com o Git**:
     - `git clone https://github.com/SUA_CONTA/FORK_DO_REPO.git && cd FORK_DO_REPO`
 - O terminal local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli].
-- É necessário **[instalar o Terraform][terraform]** para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster.
-- O `kubectl` é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [repositório oficial do Kubernetes][kuberepo].
+- É necessário [**instalar o Terraform**][terraform] para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster.
+- O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo].
 
 <BR>
 
