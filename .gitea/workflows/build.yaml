@@ -333,7 +333,7 @@ jobs:
       #     fi
 
       # Login no AWS ECR
-       Não funcional fora do GitHub
+      # Não funcional fora do GitHub
       - name: Login no AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
