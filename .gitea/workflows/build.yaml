@@ -97,7 +97,6 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go_version }}
-          cache: true
 
       - name: Setup Python
         if: matrix.language == 'python'
