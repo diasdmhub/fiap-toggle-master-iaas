@@ -331,6 +331,9 @@ jobs:
       #       docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
       #     fi
 
+      - name: Debug Docker auth
+        run: cat ~/.docker/config.json
+
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
         uses: docker/build-push-action@v7
@@ -342,8 +345,8 @@ jobs:
           push: true
           cache-from: type=gha
           tags: |
-            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
-            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:latest
 
       # - name: Push Docker image to ECR
       #   run: |
