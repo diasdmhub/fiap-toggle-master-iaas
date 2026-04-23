@@ -313,10 +313,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Login no AWS ECR
-      - name: Login no AWS ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Instalar o AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          /aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 
       # # 4. Push para o AWS ECR
       # - name: Push do microserviço ao ECR
@@ -331,6 +332,12 @@ jobs:
       #       docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
       #     fi
 
+      # # Login no AWS ECR
+      #  Não funcional fora do GitHub
+      # - name: Login no AWS ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+
       - name: Debug Docker auth
         continue-on-error: true
         run: cat ~/.docker/config.json
@@ -338,8 +345,6 @@ jobs:
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
         uses: docker/build-push-action@v7
-        env:
-          REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
         with:
           context: ./build
           file: ./${{ matrix.dockerfile }}

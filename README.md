@@ -19,6 +19,14 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 
 ## 🛠️ Roteiro de Implementação
 
+<BR>
+
+## Observações
+
+- Uso do AWS CLI no passos:
+    - Evita variáveis e suposições específicas do GitHub em ações pré-definidas
+    - Funciona de forma consistênte no GitHub, Gitea e outro runners self-hosted.
+
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
 [terraform]: https://developer.hashicorp.com/terraform/install
