@@ -97,6 +97,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go_version }}
+          cache: true
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -107,11 +108,13 @@ jobs:
       # 3. Linter / Análise Estática
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
+        env:
+          GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: "latest"
           working-directory: "./${{ matrix.code_dir }}"
-          args: "--modules-download-mode=mod"
+          args: "--modules-download-mode=readonly"
 
       - name: Python Lint (Ruff)
         if: matrix.language == 'python'
