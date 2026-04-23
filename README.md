@@ -19,6 +19,18 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 
 ## 🛠️ Roteiro de Implementação
 
+<BR>
+
+## Observações
+
+- A depender da instância utilizada na criação do CI workflow, podem haver diferenças ou limitações nas ações. No entanto, o workflow possui muita flexibilidade para diferentes cenários.
+- A autenticação na AWS pode ser realizada com o OIDC. No entanto, devido à relação de certificados e restrições em portas de serviços, o uso de secrets pode ser necessário para ambientes de CI fora do GitHub, como ambientes self-hosted.
+- Uso do AWS CLI no passos:
+    - Evita variáveis e suposições específicas do GitHub em ações pré-definidas
+    - Funciona de forma consistênte no GitHub, Gitea e outro runners self-hosted.
+
+- A verificação de vulnerabilidades da imagem pode ser realiza na AWS.
+
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
 [terraform]: https://developer.hashicorp.com/terraform/install

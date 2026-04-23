@@ -1,10 +1,14 @@
 name: ToggleMaster Microservices - CI Pipeline
 
 on:
-  # push:
-  #   branches: [ main ]
-  # pull_request:
-  #   branches: [ main ]
+  push:
+    branches: [ main ]
+    paths:
+      - build/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - build/**
   workflow_dispatch:
 
 # Permissões para OIDC
@@ -13,7 +17,7 @@ permissions:
   contents: read
 
 env:
-  TAG_VERSION: "1.0.0"
+  TAG_VERSION: "1.0.14"
   PYTHON_VERSION: "3.14"
   GO_VERSION: "stable"
   TRIVY_VERSION: "0.70.0"
@@ -97,6 +101,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go_version }}
+          cache: true
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -107,6 +112,8 @@ jobs:
       # 3. Linter / Análise Estática
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
+        env:
+          GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: "latest"
@@ -224,23 +231,23 @@ jobs:
         include:
           - service: auth
             dockerfile: build/Dockerfile-auth
-            ecr_repo: auth-service
+            ecr_repo: toggle/auth-service
 
           - service: flag
             dockerfile: build/Dockerfile-flag
-            ecr_repo: flag-service
+            ecr_repo: toggle/flag-service
 
           - service: targeting
             dockerfile: build/Dockerfile-targeting
-            ecr_repo: targeting-service
+            ecr_repo: toggle/targeting-service
 
           - service: evaluation
             dockerfile: build/Dockerfile-evaluation
-            ecr_repo: evaluation-service
+            ecr_repo: toggle/evaluation-service
 
           - service: analytics
             dockerfile: build/Dockerfile-analytics
-            ecr_repo: analytics-service
+            ecr_repo: toggle/analytics-service
 
     steps:
       # 1. Checkout
@@ -250,6 +257,8 @@ jobs:
       # 2. Docker Build
       - name: Setup do Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver: docker
 
       - name: Build do microserviço
         uses: docker/build-push-action@v7
@@ -291,10 +300,13 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      # - name: Inclui tag curta
-      #   run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Instalar o AWS CLI
+        run: |
+          curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 
-      # # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
+      # # OIDC praticamente não funcional fora do GitHub
       # - name: Configurar credenciais AWS (OIDC)
       #   id: login-ecr
       #   uses: aws-actions/configure-aws-credentials@v6
@@ -311,53 +323,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Login no AWS ECR
+      # Necessário pois a action da aws não parece funcional fora do GitHub
       - name: Login no AWS ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # # 4. Push para o AWS ECR
-      # - name: Push do microserviço ao ECR
-      #   env:
-      #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-      #   run: |
-      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-      #     docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
-      #     docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
-      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-      #       docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-      #       docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-      #     fi
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
-        uses: docker/build-push-action@v7
         env:
           REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        with:
-          driver: docker
-          context: ./build
-          file: ./${{ matrix.dockerfile }}
-          push: true
-          cache-from: type=gha
-          tags: |
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+          docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
+            docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
+          fi
 
-      # - name: Push Docker image to ECR
-      #   run: |
-      #     ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-      #     IMAGE_NAME=${ECR_REGISTRY}/${{ matrix.ecr_repo }}
-          
-      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-      #     TAG="v${{ github.run_number }}-${SHORT_SHA}"
+      # # Login no AWS ECR
+      # # Não funcional fora do GitHub
+      # - name: Login no AWS ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
 
-      #     echo "Pushing >> ${IMAGE_NAME}:${TAG}"
-      #     docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:${TAG}
-      #     docker push ${IMAGE_NAME}:${TAG}
-
-      #     # Tag "latest" apenas quando for push na branch main
-      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-      #       docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:latest
-      #       docker push ${IMAGE_NAME}:latest
-      #     fi
+      # # 4. Push para o AWS ECR
+      # - name: Push do microserviço ao ECR
+      #   uses: docker/build-push-action@v7
+      #   with:
+      #     context: ./build
+      #     file: ./${{ matrix.dockerfile }}
+      #     push: true
+      #     cache-from: type=gha
+      #     tags: |
+      #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+      #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:latest
