@@ -332,6 +332,7 @@ jobs:
       #     fi
 
       - name: Debug Docker auth
+        continue-on-error: true
         run: cat ~/.docker/config.json
 
       # 4. Push para o AWS ECR
