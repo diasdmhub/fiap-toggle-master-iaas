@@ -216,7 +216,7 @@ jobs:
   build:
     name: Build - ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: tests  # Executa somente após os testes
+    #needs: tests  # Executa somente após os testes
 
     strategy:
       fail-fast: false
