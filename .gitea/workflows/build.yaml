@@ -224,23 +224,23 @@ jobs:
         include:
           - service: auth
             dockerfile: build/Dockerfile-auth
-            ecr_repo: auth-service
+            ecr_repo: toggle/auth-service
 
           - service: flag
             dockerfile: build/Dockerfile-flag
-            ecr_repo: flag-service
+            ecr_repo: toggle/flag-service
 
           - service: targeting
             dockerfile: build/Dockerfile-targeting
-            ecr_repo: targeting-service
+            ecr_repo: toggle/targeting-service
 
           - service: evaluation
             dockerfile: build/Dockerfile-evaluation
-            ecr_repo: evaluation-service
+            ecr_repo: toggle/evaluation-service
 
           - service: analytics
             dockerfile: build/Dockerfile-analytics
-            ecr_repo: analytics-service
+            ecr_repo: toggle/analytics-service
 
     steps:
       # 1. Checkout
@@ -326,11 +326,11 @@ jobs:
       #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
       #   run: |
       #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-      #     docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
-      #     docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+      #     docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
+      #     docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}
       #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-      #       docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-      #       docker push ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
+      #       docker tag ${{ matrix.service }}-service:${{ github.sha }} ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
+      #       docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
       #     fi
 
       # 4. Push para o AWS ECR
@@ -344,8 +344,8 @@ jobs:
           push: true
           cache-from: type=gha
           tags: |
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:latest
-            ${{ env.REGISTRY }}/toggle/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
+            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
+            ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
 
       # - name: Push Docker image to ECR
       #   run: |
