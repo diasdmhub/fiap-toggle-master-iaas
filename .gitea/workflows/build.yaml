@@ -13,210 +13,210 @@ permissions:
   contents: read
 
 env:
-  TAG_VERSION: "1.0.0"
+  TAG_VERSION: "1.0.14"
   PYTHON_VERSION: "3.14"
   GO_VERSION: "stable"
   TRIVY_VERSION: "0.70.0"
 
 jobs:
-  # tests:
-  #   name: CI Tests - ${{ matrix.service }}
-  #   runs-on: ubuntu-latest
+  tests:
+    name: CI Tests - ${{ matrix.service }}
+    runs-on: ubuntu-latest
 
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - service: auth
-  #           language: go
-  #           dockerfile: build/Dockerfile-auth
-  #           code_dir: build/auth-service
-  #           go_version: ${{ env.GO_VERSION }}
-  #           serv_port: 8001
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: auth
+            language: go
+            dockerfile: build/Dockerfile-auth
+            code_dir: build/auth-service
+            go_version: ${{ env.GO_VERSION }}
+            serv_port: 8001
 
-  #         - service: flag
-  #           language: python
-  #           dockerfile: build/Dockerfile-flag
-  #           code_dir: build/flag-service
-  #           python_version: ${{ env.PYTHON_VERSION }}
-  #           serv_port: 8002
+          - service: flag
+            language: python
+            dockerfile: build/Dockerfile-flag
+            code_dir: build/flag-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8002
 
-  #         - service: targeting
-  #           language: python
-  #           dockerfile: build/Dockerfile-targeting
-  #           code_dir: build/targeting-service
-  #           python_version: ${{ env.PYTHON_VERSION }}
-  #           serv_port: 8003
+          - service: targeting
+            language: python
+            dockerfile: build/Dockerfile-targeting
+            code_dir: build/targeting-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8003
 
-  #         - service: evaluation
-  #           language: go
-  #           dockerfile: build/Dockerfile-evaluation
-  #           code_dir: build/evaluation-service
-  #           go_version: ${{ env.GO_VERSION }}
-  #           serv_port: 8004
+          - service: evaluation
+            language: go
+            dockerfile: build/Dockerfile-evaluation
+            code_dir: build/evaluation-service
+            go_version: ${{ env.GO_VERSION }}
+            serv_port: 8004
 
-  #         - service: analytics
-  #           language: python
-  #           dockerfile: build/Dockerfile-analytics
-  #           code_dir: build/analytics-service
-  #           python_version: ${{ env.PYTHON_VERSION }}
-  #           serv_port: 8005
+          - service: analytics
+            language: python
+            dockerfile: build/Dockerfile-analytics
+            code_dir: build/analytics-service
+            python_version: ${{ env.PYTHON_VERSION }}
+            serv_port: 8005
 
-  #   services:
-  #     # PSQL para testes dos microserviços
-  #     postgres:
-  #       image: docker.io/library/postgres:18-alpine
-  #       container_name: psql
-  #       env:
-  #         POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-  #         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASS }}
-  #         POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-  #       ports:
-  #         - 5432:5432
-  #       volumes:
-  #       # Monta os scripts de inicialização dos microserviços
-  #         - ${{ github.workspace }}/build/auth-service/db/init.sql:/docker-entrypoint-initdb.d/init-auth-service.sql
-  #         - ${{ github.workspace }}/build/flag-service/db/init.sql:/docker-entrypoint-initdb.d/init-flag-service.sql
-  #         - ${{ github.workspace }}/build/targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init-targeting-service.sql
+    services:
+      # PSQL para testes dos microserviços
+      postgres:
+        image: docker.io/library/postgres:18-alpine
+        container_name: psql
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASS }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        volumes:
+        # Monta os scripts de inicialização dos microserviços
+          - ${{ github.workspace }}/build/auth-service/db/init.sql:/docker-entrypoint-initdb.d/init-auth-service.sql
+          - ${{ github.workspace }}/build/flag-service/db/init.sql:/docker-entrypoint-initdb.d/init-flag-service.sql
+          - ${{ github.workspace }}/build/targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init-targeting-service.sql
 
-  #     # Redis para testes dos microserviços
-  #     redis:
-  #       image: docker.io/library/redis:alpine
-  #       container_name: redis
-  #       ports:
-  #         - 6379:6379
+      # Redis para testes dos microserviços
+      redis:
+        image: docker.io/library/redis:alpine
+        container_name: redis
+        ports:
+          - 6379:6379
 
-  #   steps:
-  #     # 1. Checkout
-  #     - name: Checkout code
-  #       uses: actions/checkout@v6
+    steps:
+      # 1. Checkout
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-  #     # 2. Setup do Go e do Python
-  #     - name: Setup Go
-  #       if: matrix.language == 'go'
-  #       uses: actions/setup-go@v6
-  #       with:
-  #         go-version: ${{ matrix.go_version }}
+      # 2. Setup do Go e do Python
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go_version }}
 
-  #     - name: Setup Python
-  #       if: matrix.language == 'python'
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version: ${{ matrix.python_version }}
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python_version }}
 
-  #     # 3. Linter / Análise Estática
-  #     - name: Go Lint (golangci-lint)
-  #       if: matrix.language == 'go'
-  #       uses: golangci/golangci-lint-action@v9
-  #       with:
-  #         version: "latest"
-  #         working-directory: "./${{ matrix.code_dir }}"
-  #         args: "--modules-download-mode=mod"
+      # 3. Linter / Análise Estática
+      - name: Go Lint (golangci-lint)
+        if: matrix.language == 'go'
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: "latest"
+          working-directory: "./${{ matrix.code_dir }}"
+          args: "--modules-download-mode=mod"
 
-  #     - name: Python Lint (Ruff)
-  #       if: matrix.language == 'python'
-  #       uses: astral-sh/ruff-action@v4.0.0
-  #       with:
-  #           version: "latest"
-  #           src: "./${{ matrix.code_dir }}"
+      - name: Python Lint (Ruff)
+        if: matrix.language == 'python'
+        uses: astral-sh/ruff-action@v4.0.0
+        with:
+            version: "latest"
+            src: "./${{ matrix.code_dir }}"
 
-  #     # 4. Local Build e Unit Test
-  #     - name: Preparação de dependências (Go)
-  #       if: matrix.language == 'go'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       run: go mod tidy
+      # 4. Local Build e Unit Test
+      - name: Preparação de dependências (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        run: go mod tidy
 
-  #     - name: Teste unitário (Go)
-  #       if: matrix.language == 'go'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       run: |
-  #         export PORT="${{ matrix.serv_port }}"
-  #         export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
-  #         export MASTER_KEY="admin123"
-  #         export REDIS_URL="redis://redis:6379"
-  #         export FLAG_SERVICE_URL="http://localhost:8002"
-  #         export TARGETING_SERVICE_URL="http://localhost:8003"
-  #         export SERVICE_API_KEY="SUA_CHAVE_DE_SERVICO"
-  #         export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-  #         export AWS_REGION="${{ secrets.AWS_REGION }}"
-  #         go run . > gorun.log 2>&1 &
-  #         for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
+      - name: Teste unitário (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        run: |
+          export PORT="${{ matrix.serv_port }}"
+          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export MASTER_KEY="admin123"
+          export REDIS_URL="redis://redis:6379"
+          export FLAG_SERVICE_URL="http://localhost:8002"
+          export TARGETING_SERVICE_URL="http://localhost:8003"
+          export SERVICE_API_KEY="SUA_CHAVE_DE_SERVICO"
+          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          go run . > gorun.log 2>&1 &
+          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-  #     - name: Preparação de dependências (Python)
-  #       if: matrix.language == 'python'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       run: pip install -r requirements.txt
+      - name: Preparação de dependências (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: pip install -r requirements.txt
 
-  #     - name: Teste unitário (Python)
-  #       if: matrix.language == 'python'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       run: |
-  #         export PORT="${{ matrix.serv_port }}"
-  #         export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
-  #         export AUTH_SERVICE_URL="http://localhost:8001"
-  #         export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
-  #         export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
-  #         export AWS_REGION="${{ secrets.AWS_REGION }}"
-  #         gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
-  #         for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
+      - name: Teste unitário (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: |
+          export PORT="${{ matrix.serv_port }}"
+          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export AUTH_SERVICE_URL="http://localhost:8001"
+          export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
+          export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
+          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
 
-  #     # 5. SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
-  #     # Fixa as versões do requirements para o Trivy
-  #     - name: Prepara o requirements para o Trivy (Python)
-  #       if: matrix.language == 'python'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       run: pip -v freeze > requirements.txt
+      # 5. SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
+      # Fixa as versões do requirements para o Trivy
+      - name: Prepara o requirements para o Trivy (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        run: pip -v freeze > requirements.txt
 
-  #     - name: Cache Trivy DB
-  #       uses: actions/cache@v5
-  #       with:
-  #         path: ~/.cache/trivy
-  #         key: trivy-db-${{ github.run_id }}
-  #         restore-keys: |
-  #           trivy-db-
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: |
+            trivy-db-
 
-  #     - name: Setup Trivy
-  #       run: |
-  #         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
-  #         sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
+      - name: Setup Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
+          sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
 
-  #     # Usa o Trivy diretamente pois não precisa de autenticação no Github
-  #     - name: SCA - Trivy
-  #       run: |
-  #         trivy fs \
-  #         --cache-dir ~/.cache/trivy \
-  #         --skip-version-check \
-  #         --disable-telemetry \
-  #         --format table \
-  #         --exit-code 1 \
-  #         --severity CRITICAL \
-  #         --ignore-unfixed \
-  #         --pkg-types library \
-  #         --scanners vuln \
-  #         "${{ github.workspace }}/${{ matrix.code_dir }}"
+      # Usa o Trivy diretamente pois não precisa de autenticação no Github
+      - name: SCA - Trivy
+        run: |
+          trivy fs \
+          --cache-dir ~/.cache/trivy \
+          --skip-version-check \
+          --disable-telemetry \
+          --format table \
+          --exit-code 1 \
+          --severity CRITICAL \
+          --ignore-unfixed \
+          --pkg-types library \
+          --scanners vuln \
+          "${{ github.workspace }}/${{ matrix.code_dir }}"
 
-  #     # 6. SAST específico por linguagem (não bloqueia automaticamente)
-  #     - name: SAST - gosec (Go)
-  #       if: matrix.language == 'go'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       continue-on-error: true
-  #       uses: securego/gosec@master
-  #       with:
-  #         args: ./...
+      # 6. SAST específico por linguagem (não bloqueia automaticamente)
+      - name: SAST - gosec (Go)
+        if: matrix.language == 'go'
+        working-directory: ${{ matrix.code_dir }}
+        continue-on-error: true
+        uses: securego/gosec@master
+        with:
+          args: ./...
 
-  #     # Usa o Bandit diretamente pois não precisa de autenticação no Github para o relatório
-  #     - name: SAST - bandit (Python)
-  #       if: matrix.language == 'python'
-  #       working-directory: ${{ matrix.code_dir }}
-  #       continue-on-error: true
-  #       run: |
-  #         pip install bandit
-  #         bandit -q -lll -iii -f txt -s B104 -r .
+      # Usa o Bandit diretamente pois não precisa de autenticação no Github para o relatório
+      - name: SAST - bandit (Python)
+        if: matrix.language == 'python'
+        working-directory: ${{ matrix.code_dir }}
+        continue-on-error: true
+        run: |
+          pip install bandit
+          bandit -q -lll -iii -f txt -s B104 -r .
 
   build:
     name: Build - ${{ matrix.service }}
     runs-on: ubuntu-latest
-    #needs: tests  # Executa somente após os testes
+    needs: tests  # Executa somente após os testes
 
     strategy:
       fail-fast: false
@@ -293,10 +293,13 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      # - name: Inclui tag curta
-      #   run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Instalar o AWS CLI
+        run: |
+          curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 
-      # # OIDC somente para o GitHub. Praticamente indisponível para instâncias self-hosted
+      # # OIDC praticamente não funcional fora do GitHub
       # - name: Configurar credenciais AWS (OIDC)
       #   id: login-ecr
       #   uses: aws-actions/configure-aws-credentials@v6
@@ -304,12 +307,6 @@ jobs:
       #     role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
       #     aws-region: ${{ secrets.AWS_REGION }}
       #     mask-aws-account-id: true
-
-      - name: Instalar o AWS CLI
-        run: |
-          curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip -q awscliv2.zip
-          ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 
       # Acesso com Access Key para instâncias self-hosted isoladas
       - name: Configurar credenciais AWS
@@ -325,10 +322,6 @@ jobs:
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
           | docker login --username AWS --password-stdin \
             ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-
-      - name: Debug Docker auth
-        continue-on-error: true
-        run: cat ~/.docker/config.json
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
@@ -360,21 +353,3 @@ jobs:
       #     tags: |
       #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
       #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:latest
-
-      # - name: Push Docker image to ECR
-      #   run: |
-      #     ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-      #     IMAGE_NAME=${ECR_REGISTRY}/${{ matrix.ecr_repo }}
-          
-      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-      #     TAG="v${{ github.run_number }}-${SHORT_SHA}"
-
-      #     echo "Pushing >> ${IMAGE_NAME}:${TAG}"
-      #     docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:${TAG}
-      #     docker push ${IMAGE_NAME}:${TAG}
-
-      #     # Tag "latest" apenas quando for push na branch main
-      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-      #       docker tag temp-image:${{ github.sha }} ${IMAGE_NAME}:latest
-      #       docker push ${IMAGE_NAME}:latest
-      #     fi
