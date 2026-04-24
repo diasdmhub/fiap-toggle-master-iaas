@@ -16,7 +16,7 @@ resource "helm_release" "argocd" {
   create_namespace = true
   version          = var.chart_version != "" ? var.chart_version : null
 
-  set {
+  set = {
     name  = "server.service.type"
     value = var.service_type
   }
