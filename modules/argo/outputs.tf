@@ -1,11 +1,11 @@
 output "argo_cd_cluster_ip" {
   description = "IP do servico LoadBalancer do ArgoCD"
-  value       = helm_release.argocd.status[0].load_balancer_ingress[*].ip
+  value       = helm_release.argocd.status.load_balancer_ingress[*].ip
 }
 
 output "argo_cd_external_url" {
   description = "URL para a API do ArgoCD"
-  value       = "http://${helm_release.argocd.status[0].load_balancer_ingress[*].hostname}"
+  value       = "http://${helm_release.argocd.status.load_balancer_ingress[*].hostname}"
 }
 
 output "namespace" {
