@@ -80,3 +80,17 @@ variable "git_repo" {
   type        = string
   default     = "fiap-toggle-master-iaas"
 }
+
+# Variáveis do ArgoCD
+#############################
+variable "chart_version" {
+  description = "Versao do Helm chart para o Argo CD (vazio para latest)"
+  type        = string
+  default     = ""
+}
+
+variable "service_type" {
+  description = "Tipo de serviço para o ArgoCD (ClusterIP ou LoadBalancer)"
+  type        = string
+  default     = "ClusterIP"
+}
