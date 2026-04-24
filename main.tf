@@ -73,7 +73,7 @@ module "oidc" {
 }
 
 module "argocd" {
-  source = "./modules/argocd"
+  source = "./modules/argo"
 
   name_prefix      = var.name_prefix
   chart_version    = var.chart_version
