@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 3.1.1"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 3.1.0"
+    }
   }
 }
 
@@ -20,4 +24,11 @@ resource "helm_release" "argocd" {
       name  = "server.service.type"
       value = var.service_type
     }]
+}
+
+data "kubernetes_service" "argocd_server" {
+  metadata {
+    name      = "argocd-server"
+    namespace = helm_release.argocd.namespace
+  }
 }
