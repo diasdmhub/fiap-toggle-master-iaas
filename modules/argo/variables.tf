@@ -1,8 +1,3 @@
-variable "name_prefix" {
-  description = "Prefixo do nome dos recursos"
-  type        = string
-}
-
 variable "chart_version" {
   description = "Versao do Helm chart para o Argo CD (vazio para latest)"
   type        = string

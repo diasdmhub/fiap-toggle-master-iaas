@@ -13,7 +13,7 @@ terraform {
 }
 
 resource "helm_release" "argocd" {
-  name             = "${var.name_prefix}-argocd"
+  name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
   namespace        = "argocd"

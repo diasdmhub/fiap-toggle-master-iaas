@@ -75,7 +75,6 @@ module "oidc" {
 module "argo" {
   source = "./modules/argo"
 
-  name_prefix      = var.name_prefix
   chart_version    = var.chart_version
   service_type     = var.service_type
   cluster_endpoint = module.eks.eks_cluster_endpoint
