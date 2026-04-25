@@ -72,7 +72,7 @@ module "oidc" {
   git_repo       = var.git_repo
 }
 
-module "argocd" {
+module "argo" {
   source = "./modules/argo"
 
   name_prefix      = var.name_prefix
