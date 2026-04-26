@@ -39,9 +39,11 @@ O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do T
 
 Copie o arquivo de exemplo e edite ele com os valores do seu ambiente.
 
-```
+```bash
 cp terraform.tfvars.example terraform.tfvars
 ```
+
+<BR>
 
 ### 2. Inicialização
 
@@ -55,7 +57,7 @@ Esses serviços "extras" precisam ser configurados antes da inicialização do T
 
 Após a inicialização do ambiente, o Terraform estará preparado para aplicar as configurações na AWS. Para isso, basta executar o "Plan" e "Apply" do Terraform.
 
-```
+```bash
 terraform plan
 terraform apply
 ```
