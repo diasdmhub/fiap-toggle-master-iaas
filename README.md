@@ -15,6 +15,7 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 - O terminal local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli];
 - É necessário [**instalar o Terraform**][terraform] para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster;
 - O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
+- _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado para auxiliar as configurações da ToggleMaster no cluster. Abaixo são oferecidos alguns scripts que utilizam ele.
 
 <BR>
 
@@ -62,6 +63,26 @@ terraform plan
 terraform apply
 ```
 
+> A criação dos recursos pode levar alguns minutos, principalmente por causa do cluster EKS e seus nodes. Ao final, será apresentada uma mensagem indicando o término da implementação seguido dos outputs gerados.
+
+> ```
+> Apply complete! Resources: 49 added, 0 changed, 0 destroyed.
+> ```
+
+### 2.1 Configuração `kubectl`
+
+Após a criação do cluster EKS, é necessário atualizar a configuração do `kubectl` para o acesso ao cluster. Utilize o comando abaixo para isso.
+
+```bash
+aws eks update-kubeconfig --region us-east-1 --name fiap-toggle-eks-cluster
+```
+
+<BR>
+
+## 3. Configuração ArgoCD
+
+Para esta implementação é utlizado o ArgoCD para que a ToggleMaster seja atualizada dinamicamente no EKS. O plano do Terraform já está preparado para instalar o ArgoCD no cluster e ele deve estar acessível após essa
+
 <BR>
 
 ## 3. Configuração ToggleMaster
@@ -69,6 +90,10 @@ terraform apply
 Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com as configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
 
 Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. O script `toggle_deploy.sh` facilita o preenchimento dos valores corretos no arquivo.
+
+```bash
+toggle_deploy.sh
+```
 
 <BR>
 
@@ -88,3 +113,4 @@ Esses valores podem ser aplicados na definição do ArgoCD que aplicará a Toggl
 [terraform]: https://developer.hashicorp.com/terraform/install
 [kuberepo]: https://kubernetes.io/docs/tasks/tools/
 [init]: ./init.sh
+[argocdcli]: https://argo-cd.readthedocs.io/en/stable/cli_installation/

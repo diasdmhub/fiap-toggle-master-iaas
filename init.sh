@@ -12,7 +12,7 @@ for cmd in aws terraform; do
 done
 
 if (( ${#missing[@]} )); then
-    printf 'ERRO: os requisitos abaixo não foram encontrados. Por favor, verifique a instação deles.\n' >&2
+    printf 'ERRO: os requisitos abaixo não foram encontrados. Por favor, verifique a instalação deles.\n' >&2
     for m in "${missing[@]}"; do
         printf ' Binário - %s\n' "$m" >&2
     done
