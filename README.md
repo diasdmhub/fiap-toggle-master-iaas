@@ -45,7 +45,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 <BR>
 
-### 2. Inicialização
+### 2. Inicialização AWS
 
 Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza a AWS para a persistência do estado da infraestrutura e configuração criada. O S3 Bucket é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o DynamoDB para armazenar a "state lock" e evitar modificações concorrentes.
 
@@ -61,6 +61,14 @@ Após a inicialização do ambiente, o Terraform estará preparado para aplicar 
 terraform plan
 terraform apply
 ```
+
+<BR>
+
+## 3. Configuração ToggleMaster
+
+Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com as configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
+
+Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. O script `toggle_deploy.sh` facilita o preenchimento dos valores corretos no arquivo.
 
 <BR>
 
