@@ -1,6 +1,5 @@
 # Arquivos de exemplo para deploy com o ArgoCD
-argo_deploy.yaml
-argo_deploy.yaml.*
+/argo/argo_deploy.yaml
 
 # Local .terraform directories
 .terraform/
