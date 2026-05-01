@@ -343,6 +343,23 @@ jobs:
             docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
           fi
 
+      # - name: Atualizar o manifesto de deployment
+      #   env:
+      #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      #   run: |
+      #     SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+      #     NEW_IMAGE="${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+          
+      #     # Atualizar a imagem no manifesto de deployment
+      #     yq -i '.spec.template.spec.containers[0].image = "'${NEW_IMAGE}'"' "kube/0*0-${{ matrix.service }}/*-deployment.yaml"
+          
+      #     # Enviar a configuração para o repositório
+      #     git config user.name "usuario git"
+      #     git config user.email "email@usuario.com"
+      #     git add "kube/0*0-${{ matrix.service }}/*-deployment.yaml"
+      #     git commit -m "Update da imagem do serviço ${{ matrix.service }} para v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+      #     git push origin ${{ github.ref }}
+
       # # Login no AWS ECR
       # # Não funcional fora do GitHub
       # - name: Login no AWS ECR

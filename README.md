@@ -24,7 +24,7 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 
 Para a implementação inicial, alguns dados precisam ser configurados para permitir que o ambiente seja criado de forma consistente e atendendo às características do ambiente.
 
-#### 1.1 Variáveis
+#### 1.1 Variáveis Terraform
 
 O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do Terraform. Já existem alguns valores pré-definidos, mas é **altamente recomendado que as variáveis abaixo sejam definidas ou alteradas**:
 
@@ -72,6 +72,8 @@ terraform apply
     - Evita variáveis e suposições específicas do GitHub em ações pré-definidas;
     - Funcionar de forma consistênte no GitHub, Gitea e outro runners self-hosted.
 - A verificação de vulnerabilidades da imagem pode ser realiza na AWS, no entanto, podem haver custos implícitos.
+
+- Considerando que o objetivo desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
 
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/

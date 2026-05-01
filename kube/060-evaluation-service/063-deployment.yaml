@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: evaluation
-        image: 123456789012.abc.def.region.amazonaws.com/toggle/evaluation-service:latest
+        image: __ECR_REPO__/evaluation-service:latest
         ports:
         - containerPort: 8004
 
