@@ -88,3 +88,19 @@ variable "service_type" {
   type        = string
   default     = "ClusterIP"
 }
+
+# Variáveis do External Secrets
+#############################
+variable "external_secrets_chart_version" {
+  description = "Versão do Helm chart do External Secrets Operator (vazio para latest)"
+  type        = string
+  default     = ""
+}
+
+# Variáveis do Keda
+#############################
+variable "keda_chart_version" {
+  description = "Versão do Helm chart do KEDA (vazio para latest)"
+  type        = string
+  default     = ""
+}
