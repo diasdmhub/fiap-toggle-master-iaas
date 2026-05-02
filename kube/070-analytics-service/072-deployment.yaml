@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: analytics
-        image: 123456789012.abc.def.region.amazonaws.com/toggle/analytics-service:latest
+        image: __ECR_REPO__/analytics-service:latest
         ports:
         - containerPort: 8005
 

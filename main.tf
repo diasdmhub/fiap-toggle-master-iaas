@@ -71,3 +71,15 @@ module "oidc" {
   git_org        = var.git_org
   git_repo       = var.git_repo
 }
+
+module "argo" {
+  source = "./modules/argo"
+
+  chart_version    = var.chart_version
+  service_type     = var.service_type
+  cluster_endpoint = module.eks.eks_cluster_endpoint
+  cluster_ca       = module.eks.eks_cluster_ca
+  cluster_name     = module.eks.eks_cluster_name
+
+  depends_on = [module.eks]
+}

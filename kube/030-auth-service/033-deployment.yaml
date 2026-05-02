@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: auth
-        image: 123456789012.abc.def.region.amazonaws.com/toggle/auth-service:latest
+        image: __ECR_REPO__/auth-service:latest
         ports:
         - containerPort: 8001
 

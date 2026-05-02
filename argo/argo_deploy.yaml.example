@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: togglemaster
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/account/repo  # ATUALIZE A URL DO SEU REPOSITÓRIO
+    targetRevision: HEAD
+    path: kube
+
+    kustomize:
+      patches:
+        # Definição das imagens
+        - target:
+            kind: Deployment
+            name: auth-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/image
+              value:
+        - target:
+            kind: Deployment
+            name: flag-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/image
+              value:
+        - target:
+            kind: Deployment
+            name: targeting-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/image
+              value:
+        - target:
+            kind: Deployment
+            name: evaluation-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/image
+              value:
+        - target:
+            kind: Deployment
+            name: analytics-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/image
+              value:
+
+        # Definição dos configmaps
+        - target:
+            kind: ConfigMap
+            name: evaluation-config  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /data/AWS_REGION
+              value: us-east-1
+        - target:
+            kind: ConfigMap
+            name: analytics-config  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /data/AWS_REGION
+              value: us-east-1
+            - op: replace
+              path: /data/AWS_DYNAMODB_TABLE
+              value: fiap-toggle-dynamo-table
+
+        # Definição do secret store
+        - target:
+            kind: ClusterSecretStore
+            name: aws-secrets-manager  # ATUALIZE O CAMPO "VALUE" ABAIXO
+          patch: |-
+            - op: replace
+              path: /spec/provider/aws/region
+              value: us-east-1
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: toggle
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -41,3 +41,8 @@ output "oidc_outputs" {
   value       = module.oidc
   description = "Outputs do modulo OIDC"
 }
+
+output "argocd_outputs" {
+  value       = module.argo
+  description = "Outputs do modulo Argo"
+}

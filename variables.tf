@@ -23,7 +23,6 @@ variable "aws_region" {
 variable "subnet_prefix" {
   description = "Os 2 primeiros octetos do CIDR da VPC"
   type        = string
-  default     = "10.12"
 }
 
 variable "public_subnet_nums" {
@@ -44,19 +43,16 @@ variable "private_subnet_nums" {
 variable "db_name" {
   description = "Nome do banco de dados inicial no RDS"
   type        = string
-  default     = "toggle_db"
 }
 
 variable "db_username" {
   description = "Usuário master do PostgreSQL"
   type        = string
-  default     = "toggle"
 }
 
 variable "db_password" {
   description = "Senha do usuário master (defina uma variável de ambiente)"
   type        = string
-  default     = "toggle_dbmaster"
   sensitive   = true
 }
 
@@ -64,19 +60,31 @@ variable "db_password" {
 #############################
 # URL defaults to GitHub
 variable "git_domain" {
-  description = "git issuer domain"
+  description = "Domínio provedor Git"
   type        = string
   default     = "token.actions.githubusercontent.com"
 }
 
 variable "git_org" {
-  description = "git account"
+  description = "Conta do provedor Git"
   type        = string
-  default     = "git_acc"
 }
 
 variable "git_repo" {
-  description = "git repository"
+  description = "Repositório do provedor Git"
   type        = string
-  default     = "fiap-toggle-master-iaas"
+}
+
+# Variáveis do ArgoCD
+#############################
+variable "chart_version" {
+  description = "Versao do Helm chart para o Argo CD (vazio para latest)"
+  type        = string
+  default     = ""
+}
+
+variable "service_type" {
+  description = "Tipo de serviço para o ArgoCD (ClusterIP ou LoadBalancer)"
+  type        = string
+  default     = "ClusterIP"
 }
