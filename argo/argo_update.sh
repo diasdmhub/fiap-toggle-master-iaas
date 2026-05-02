@@ -30,7 +30,7 @@ done
 # 3. Criação de uma conta de serviço
 
 # Variáveis
-NAME_PREFIX="$(grep '^name_prefix' terraform.tfvars | cut -d '"' -f 2)"
+NAME_PREFIX="$(grep '^name_prefix' ../terraform.tfvars | cut -d '"' -f 2)"
 
 SERVICE_ACC_NAME="${NAME_PREFIX}-serv-acc"
 CLUSTER_NAME="${NAME_PREFIX}-eks-cluster"
@@ -43,7 +43,7 @@ ACC_ID=$(aws sts get-caller-identity --query Account --output text)
 OIDC_ID=$(aws eks describe-cluster --name $CLUSTER_NAME --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
 
 # CARREGA O ARQUIVO DE POLÍTICAS EXTRAS
-POLICY_LOAD=$(sed "s/_ACCOUNT_ID_/$ACC_ID/g" toggle-policy.json)
+POLICY_LOAD=$(sed "s/_ACCOUNT_ID_/$ACC_ID/g" ./argo/toggle-policy.json)
 
 # CRIA O PROVEDOR IAM OPENID PARA O CLUSTER
 eksctl utils associate-iam-oidc-provider --cluster "$CLUSTER_NAME" --approve
