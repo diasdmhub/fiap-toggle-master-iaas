@@ -24,13 +24,14 @@ sed -i -E "s|^(\s+)repoURL: .*|\1repoURL: $(git config --get remote.origin.url)|
 
 for serv in "auth" "flag" "targeting" "evaluation" "analytics"; do
     SERVICE=$(terraform output -json ecr_outputs | jq -r .ecr_repository_urls.$serv)
-    sed -i "/name: ${serv}-service/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${SERVICE}:latest|" argo/argo_deploy.yaml
+    sed -i "/name: ${serv}-service/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${SERVICE}:latest|" argo/argo_deploy.yaml && \
+    echo "URL do $serv-service atualizada"
 done
 
 # 3. Criação de uma conta de serviço
 
 # Variáveis
-NAME_PREFIX="$(grep '^name_prefix' ../terraform.tfvars | cut -d '"' -f 2)"
+NAME_PREFIX="$(grep '^name_prefix' terraform.tfvars | cut -d '"' -f 2)"
 
 SERVICE_ACC_NAME="${NAME_PREFIX}-serv-acc"
 CLUSTER_NAME="${NAME_PREFIX}-eks-cluster"
