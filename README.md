@@ -15,6 +15,7 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 - O terminal local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli];
 - É necessário [**instalar o Terraform**][terraform] para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster;
 - O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
+- O [`helm`][helm] também pode ser utilizado neste cenário ao aplicar os [ExternalSecrets (ClusterSecretStore)][extsecret].
 - _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado para auxiliar as configurações da ToggleMaster no cluster. Abaixo são oferecidos alguns scripts que utilizam ele.
 
 <BR>
@@ -77,6 +78,45 @@ Após a criação do cluster EKS, é necessário atualizar a configuração do `
 aws eks update-kubeconfig --region us-east-1 --name fiap-toggle-eks-cluster
 ```
 
+### 2.2 Configuração Helm
+
+O Helm é utilizado nesta implementação para facilitar a instalação de recursos acessórios ao ambiente Kubernetes. Diversas das distribuições disponibilizam pacotes de instalação do Helm por meio de seus gerenciadores de pacotes. Por exemplo:
+
+```bash
+dnf install helm
+```
+
+Também é possível instalar a versão mais recente do Helm a partir de seu repositório público.
+
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
+```
+
+> O Helm não é necessário para a implementação da infraestrutura da ToggleMaster, mas é recomendado.
+
+<BR>
+
+### 2.3 Configuração External Secrets
+
+Com o Helm instalado, deve-se instalar o recurso de External Secrets de modo a permitir que as variáveis sensíveis do sistema ToggleMaster sejam armazenadas em um repositório seguro. Neste caso, a instalação do External Secrets é realizada com os comandos abaixo.
+
+```bash
+helm repo add external-secrets https://charts.external-secrets.io
+helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
+```
+
+<BR>
+
+### 2.4 Configuração Keda
+
+Outro recurso extra da ToggleMaster, é o Keda que é utilizado para escalonar o microserviço `analytics-service`, de modo que seus pods aumentem caso o tamanho da fila SQS aumente significativamente.
+
+Para instalar o KEDA, basta aplicar seu manifesto, conforme [indicado em sua documentação][keda].
+
+```bash
+kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.19.0/keda-2.19.0.yaml
+```
+
 <BR>
 
 ## 3. Configuração ArgoCD
@@ -107,10 +147,14 @@ toggle_deploy.sh
 - A verificação de vulnerabilidades da imagem pode ser realiza na AWS, no entanto, podem haver custos implícitos.
 
 - Considerando que o objetivo desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
+- 
 
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
 [terraform]: https://developer.hashicorp.com/terraform/install
 [kuberepo]: https://kubernetes.io/docs/tasks/tools/
 [init]: ./init.sh
+[helm]: https://helm.sh/docs/intro/install
+[extsecret]: https://external-secrets.io/
 [argocdcli]: https://argo-cd.readthedocs.io/en/stable/cli_installation/
+[keda]: https://keda.sh/docs/2.19/deploy/#yaml
