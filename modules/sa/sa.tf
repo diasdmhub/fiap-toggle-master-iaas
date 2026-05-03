@@ -69,7 +69,7 @@ resource "aws_iam_role_policy_attachment" "extra" {
 }
 
 # Service Account Kubernetes com anotação da role
-resource "kubernetes_service_account" "this" {
+resource "kubernetes_service_account_v1" "this" {
   metadata {
     name      = local.service_account_name
     namespace = var.namespace

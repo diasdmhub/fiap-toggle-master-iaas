@@ -1,6 +1,6 @@
 output "service_account_name" {
   description = "Nome da service account criada no Kubernetes"
-  value       = kubernetes_service_account.this.metadata[0].name
+  value       = kubernetes_service_account_v1.this.metadata[0].name
 }
 
 output "role_arn" {

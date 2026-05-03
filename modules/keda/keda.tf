@@ -11,10 +11,10 @@ resource "helm_release" "keda" {
   version    = var.chart_version != "" ? var.chart_version : null
   namespace  = kubernetes_namespace_v1.keda.metadata[0].name
 
-  set = {
+  set = [{
     name  = "watchNamespace"
     value = ""  # vazio = monitora todos os namespaces
-  }
+  }]
 
   depends_on = [kubernetes_namespace_v1.keda]
 }

@@ -76,10 +76,16 @@ resource "helm_release" "external_secrets" {
   version    = var.chart_version != "" ? var.chart_version : null
   namespace  = kubernetes_namespace_v1.external_secrets.metadata[0].name
 
-  set = {
-    "serviceAccount.name"                                       = local.sa_name
-    "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn" = aws_iam_role.external_secrets.arn
-  }
+  set = [
+    {
+      name  = "serviceAccount.name"
+      value = local.sa_name
+    },
+    {
+      name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = aws_iam_role.external_secrets.arn
+    }
+  ]
 
   depends_on = [
     kubernetes_namespace_v1.external_secrets,
