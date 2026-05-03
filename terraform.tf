@@ -56,5 +56,3 @@ provider "kubernetes" {
     command     = "aws"
   }
 }
-
-data "aws_caller_identity" "current" {}

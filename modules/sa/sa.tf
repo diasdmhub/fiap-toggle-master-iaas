@@ -80,3 +80,5 @@ resource "kubernetes_service_account_v1" "this" {
     }
   }
 }
+
+data "aws_caller_identity" "current" {}
