@@ -18,8 +18,3 @@ variable "oidc_provider_url" {
   description = "URL do OIDC provider do cluster EKS (sem o prefixo https://)"
   type        = string
 }
-
-variable "extra_policy_json" {
-  description = "Conteúdo JSON da política extra (toggle-policy.json com account_id já substituído)"
-  type        = string
-}

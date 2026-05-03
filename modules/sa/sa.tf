@@ -10,7 +10,9 @@ locals {
 # Política extra da aplicação (equivalente ao toggle-policy.json da fase 2)
 resource "aws_iam_policy" "extra" {
   name   = local.policy_name
-  policy = var.extra_policy_json
+  policy = templatefile("${path.module}/toggle-policy.json", {
+    account_id = data.aws_caller_identity.current.account_id
+  })
 }
 
 # Role IAM com trust policy IRSA
