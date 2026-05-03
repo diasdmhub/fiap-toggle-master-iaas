@@ -48,8 +48,6 @@ resource "aws_iam_role" "this" {
 # Políticas gerenciadas AWS
 locals {
   managed_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonEKSServiceRolePolicy",
-    "arn:aws:iam::aws:policy/AWSServiceRoleForAmazonEKSNodegroup",
     "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
     "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController",
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
@@ -70,11 +68,17 @@ resource "aws_iam_role_policy_attachment" "extra" {
   policy_arn = aws_iam_policy.extra.arn
 }
 
+resource "kubernetes_namespace_v1" "app" {
+  metadata {
+    name = var.namespace
+  }
+}
+
 # Service Account Kubernetes com anotação da role
 resource "kubernetes_service_account_v1" "this" {
   metadata {
     name      = local.service_account_name
-    namespace = var.namespace
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.this.arn
     }
