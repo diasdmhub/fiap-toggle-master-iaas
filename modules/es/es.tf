@@ -7,7 +7,7 @@ locals {
 }
 
 # Namespace dedicado
-resource "kubernetes_namespace" "external_secrets" {
+resource "kubernetes_namespace_v1" "external_secrets" {
   metadata {
     name = local.namespace
   }
@@ -74,19 +74,19 @@ resource "helm_release" "external_secrets" {
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
   version    = var.chart_version != "" ? var.chart_version : null
-  namespace  = kubernetes_namespace.external_secrets.metadata[0].name
+  namespace  = kubernetes_namespace_v1.external_secrets.metadata[0].name
 
-  set {
+  set = {
     name  = "serviceAccount.name"
     value = local.sa_name
   }
-  set {
+  set = {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.external_secrets.arn
   }
 
   depends_on = [
-    kubernetes_namespace.external_secrets,
+    kubernetes_namespace_v1.external_secrets,
     aws_iam_role_policy_attachment.external_secrets
   ]
 }

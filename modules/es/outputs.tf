@@ -5,5 +5,5 @@ output "external_secrets_role_arn" {
 
 output "external_secrets_namespace" {
   description = "Namespace onde o External Secrets foi instalado"
-  value       = kubernetes_namespace.external_secrets.metadata[0].name
+  value       = kubernetes_namespace_v1.external_secrets.metadata[0].name
 }

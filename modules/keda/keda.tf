@@ -1,4 +1,4 @@
-resource "kubernetes_namespace" "keda" {
+resource "kubernetes_namespace_v1" "keda" {
   metadata {
     name = "keda"
   }
@@ -9,12 +9,12 @@ resource "helm_release" "keda" {
   repository = "https://kedacore.github.io/charts"
   chart      = "keda"
   version    = var.chart_version != "" ? var.chart_version : null
-  namespace  = kubernetes_namespace.keda.metadata[0].name
+  namespace  = kubernetes_namespace_v1.keda.metadata[0].name
 
-  set {
+  set = {
     name  = "watchNamespace"
     value = ""  # vazio = monitora todos os namespaces
   }
 
-  depends_on = [kubernetes_namespace.keda]
+  depends_on = [kubernetes_namespace_v1.keda]
 }

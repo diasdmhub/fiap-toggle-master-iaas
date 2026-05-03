@@ -85,7 +85,7 @@ module "argo" {
 }
 
 
-module "external_secrets" {
+module "es" {
   source = "./modules/es"
 
   name_prefix       = var.name_prefix
