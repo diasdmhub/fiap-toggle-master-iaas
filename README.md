@@ -67,7 +67,7 @@ terraform apply
 > A criação dos recursos pode levar alguns minutos, principalmente por causa do cluster EKS e seus nodes. Ao final, será apresentada uma mensagem indicando o término da implementação seguido dos outputs gerados.
 
 > ```
-> Apply complete! Resources: 49 added, 0 changed, 0 destroyed.
+> Apply complete! Resources: 69 added, 0 changed, 0 destroyed.
 > ```
 
 ### 2.1 Configuração `kubectl`
@@ -78,7 +78,61 @@ Após a criação do cluster EKS, é necessário atualizar a configuração do `
 aws eks update-kubeconfig --region us-east-1 --name fiap-toggle-eks-cluster
 ```
 
-### 2.2 Configuração Helm
+<BR>
+
+### 2.2 Configuração de credenciais
+
+Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais sensíveis só podem ser definidos após a criação da infraestrutura na AWS. Para isso, é utilizado o gerenciador da AWS (_AWS Secrets Manager_). Alguns valores são extraídos dos outputs do Terraform, outros são definidos manualmente. Eles são considerados sensíveis para evitar a exposição em repositórios públicos.
+
+Registre os valores conforme abaixo.
+
+#### DB URL
+
+> A URL de conexão com o PostgreSQL já inclui o usuário e senha do BD definido no arquivo `terraform.tfvars`.
+
+```bash
+aws secretsmanager create-secret \
+    --name "toggle/rds" \
+    --description "URL de conexão do banco de dados PostgreSQL" \
+    --secret-string "{\"password\": \"$(terraform output -json rds_outputs | jq -r .rds_connection_url)\"}"
+```
+
+#### SQS URL
+
+```bash
+aws secretsmanager create-secret \
+    --name "toggle/sqs" \
+    --description "URL da fila SQS da AWS" \
+    --secret-string "{\"password\": \"$(terraform output -json sqs_outputs | jq -r .sqs_queue_url)\"}"
+```
+
+<BR>
+
+#### Redis/Valkey URL
+
+```bash
+aws secretsmanager create-secret \
+    --name "toggle/redis_url" \
+    --description "URL do seu AWS ElastiCache com o schema rediss://" \
+    --secret-string "{\"password\": \"$(terraform output -json cache_outputs | jq -r .elasticache_valkey_connection_string)\"}"
+```
+
+<BR>
+
+#### MasterKey do microserviço Auth
+
+> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere "admin123" para um valor mais complexo e seguro.**
+
+```bash
+aws secretsmanager create-secret \
+    --name "toggle/master_key" \
+    --description "Chave mestre para o microserviço de autenticação Auth" \
+    --secret-string '{"password": "admin123"}'
+```
+
+<BR>
+
+## Configuração Helm
 
 O Helm é utilizado nesta implementação para facilitar a instalação de recursos acessórios ao ambiente Kubernetes. Diversas das distribuições disponibilizam pacotes de instalação do Helm por meio de seus gerenciadores de pacotes. Por exemplo:
 
