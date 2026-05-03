@@ -9,7 +9,7 @@
         "sqs:GetQueueAttributes",
         "sqs:DeleteMessage"
       ],
-      "Resource": "arn:aws:sqs:*:_ACCOUNT_ID_:*"
+      "Resource": "arn:aws:sqs:*:${account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -17,7 +17,7 @@
         "dynamodb:GetItem",
         "dynamodb:PutItem"
       ],
-      "Resource": "arn:aws:dynamodb:*:_ACCOUNT_ID_:table/*"
+      "Resource": "arn:aws:dynamodb:*:${account_id}:table/*"
     }
   ]
 }

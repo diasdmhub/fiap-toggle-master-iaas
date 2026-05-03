@@ -1,3 +1,4 @@
+# Criar External Secrets
 locals {
   namespace      = "external-secrets"
   sa_name        = "${var.name_prefix}-external-secrets-sa"

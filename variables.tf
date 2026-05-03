@@ -104,3 +104,11 @@ variable "keda_chart_version" {
   type        = string
   default     = ""
 }
+
+# Variáveis do Service Acc
+#############################
+variable "namespace" {
+  description = "Namespace Kubernetes da aplicação"
+  type        = string
+  default     = "toggle"
+}

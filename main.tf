@@ -110,3 +110,19 @@ module "keda" {
 
   depends_on = [module.eks]
 }
+
+module "sa" {
+  source = "./modules/sa"
+
+  name_prefix       = var.name_prefix
+  namespace         = var.namespace
+  oidc_provider_arn = module.eks.eks_oidc_provider_arn
+  oidc_provider_url = module.eks.eks_oidc_provider_url
+
+  # Captura o account ID diretamente no Terraform
+  extra_policy_json = templatefile("${path.module}/toggle-policy.json", {
+    account_id = data.aws_caller_identity.current.account_id
+  })
+
+  depends_on = [module.eks]
+}
