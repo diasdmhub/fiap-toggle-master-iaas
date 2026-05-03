@@ -83,3 +83,41 @@ module "argo" {
 
   depends_on = [module.eks]
 }
+
+
+module "es" {
+  source = "./modules/es"
+
+  name_prefix       = var.name_prefix
+  chart_version     = var.external_secrets_chart_version
+  cluster_endpoint  = module.eks.eks_cluster_endpoint
+  cluster_ca        = module.eks.eks_cluster_ca
+  cluster_name      = module.eks.eks_cluster_name
+  oidc_provider_arn = module.eks.eks_oidc_provider_arn
+  oidc_provider_url = module.eks.eks_oidc_provider_url
+
+  depends_on = [module.eks]
+}
+
+module "keda" {
+  source = "./modules/keda"
+
+  name_prefix      = var.name_prefix
+  chart_version    = var.keda_chart_version
+  cluster_endpoint = module.eks.eks_cluster_endpoint
+  cluster_ca       = module.eks.eks_cluster_ca
+  cluster_name     = module.eks.eks_cluster_name
+
+  depends_on = [module.eks]
+}
+
+module "sa" {
+  source = "./modules/sa"
+
+  name_prefix       = var.name_prefix
+  namespace         = var.namespace
+  oidc_provider_arn = module.eks.eks_oidc_provider_arn
+  oidc_provider_url = module.eks.eks_oidc_provider_url
+
+  depends_on = [module.eks]
+}

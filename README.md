@@ -49,7 +49,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 ### 2. Inicialização AWS
 
-Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza a AWS para a persistência do estado da infraestrutura e configuração criada. O S3 Bucket é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o DynamoDB para armazenar a "state lock" e evitar modificações concorrentes.
+Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza a AWS para a persistência do estado da infraestrutura e configuração criada. O **S3 Bucket** é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o **DynamoDB** para armazenar a "state lock" e evitar modificações concorrentes.
 
 Esses serviços "extras" precisam ser configurados antes da inicialização do Terraform, de modo a permitir que ele crie a persistência do estado da configuração. Portanto, foi criado o script [`init.sh`][init] para configurar o ambiente antes de inicializar o Terraform. Ele deve ser executado na raiz do repositório.
 

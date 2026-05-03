@@ -46,3 +46,13 @@ output "argocd_outputs" {
   value       = module.argo
   description = "Outputs do modulo Argo"
 }
+
+output "es_outputs" {
+  value       = module.es
+  description = "Outputs do modulo External Secrets (ES)"
+}
+
+output "keda_outputs" {
+  value       = module.keda
+  description = "Outputs do modulo Keda"
+}
