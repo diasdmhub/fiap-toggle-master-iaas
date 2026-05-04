@@ -23,11 +23,11 @@ cp argo/argo_deploy.yaml.example argo/argo_deploy.yaml
 sed -i -E "s|^(\s+)repoURL: .*|\1repoURL: $(git config --get remote.origin.url)|" argo/argo_deploy.yaml && \
     echo "URL do repositório atualizada"
 
-sed -i "/serviceAccountRef/,/value:/ s|^\(\s*\)value:\s*$|\1value: $(terraform output -json es_outputs | jq -r .external_secrets_role_name)|" argo/argo_deploy.yaml && \
-    echo "Nome do External Secrets service account atualizado"
-
 for serv in "auth" "flag" "targeting" "evaluation" "analytics"; do
     SERVICE=$(terraform output -json ecr_outputs | jq -r .ecr_repository_urls.$serv)
     sed -i "/name: ${serv}-service/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${SERVICE}:latest|" argo/argo_deploy.yaml && \
     echo "URL do $serv-service atualizada"
 done
+
+sed -i "/serviceAccountRef/,/value:/ s|^\(\s*\)value:\s*$|\1value: $(terraform output -json es_outputs | jq -r .external_secrets_role_name)|" argo/argo_deploy.yaml && \
+    echo "Nome do External Secrets service account atualizado"
