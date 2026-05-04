@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - 000-namespace.yaml
+  - 005-secret-store.yaml
   - 010-secrets-db.yaml
   - 020-secrets-sqs.yaml
   - 030-auth-service/031-configmap.yaml
