@@ -84,7 +84,7 @@ aws eks update-kubeconfig --region us-east-1 --name fiap-toggle-eks-cluster
 
 Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais sensíveis só podem ser definidos após a criação da infraestrutura na AWS. Para isso, é utilizado o gerenciador da AWS (_AWS Secrets Manager_). Alguns valores são extraídos dos outputs do Terraform, outros são definidos manualmente. Eles são considerados sensíveis para evitar a exposição em repositórios públicos.
 
-Registre os valores conforme abaixo.
+⚠️ Note que os secrets criados abaixo utilizam o namespace igual ao prefixo do nome dos recursos utilizado no Terraform ("_fiap-toggle_" por padrão). Altere caso utilize outro nome.
 
 #### DB URL
 
@@ -92,7 +92,7 @@ Registre os valores conforme abaixo.
 
 ```bash
 aws secretsmanager create-secret \
-    --name "toggle/rds" \
+    --name "fiap-toggle/rds" \
     --description "URL de conexão do banco de dados PostgreSQL" \
     --secret-string "{\"password\": \"$(terraform output -json rds_outputs | jq -r .rds_connection_url)\"}"
 ```
@@ -101,7 +101,7 @@ aws secretsmanager create-secret \
 
 ```bash
 aws secretsmanager create-secret \
-    --name "toggle/sqs" \
+    --name "fiap-toggle/sqs" \
     --description "URL da fila SQS da AWS" \
     --secret-string "{\"password\": \"$(terraform output -json sqs_outputs | jq -r .sqs_queue_url)\"}"
 ```
@@ -112,7 +112,7 @@ aws secretsmanager create-secret \
 
 ```bash
 aws secretsmanager create-secret \
-    --name "toggle/redis_url" \
+    --name "fiap-toggle/redis_url" \
     --description "URL do seu AWS ElastiCache com o schema rediss://" \
     --secret-string "{\"password\": \"$(terraform output -json cache_outputs | jq -r .elasticache_valkey_connection_string)\"}"
 ```
@@ -125,7 +125,7 @@ aws secretsmanager create-secret \
 
 ```bash
 aws secretsmanager create-secret \
-    --name "toggle/master_key" \
+    --name "fiap-toggle/master_key" \
     --description "Chave mestre para o microserviço de autenticação Auth" \
     --secret-string '{"password": "admin123"}'
 ```
@@ -138,7 +138,7 @@ aws secretsmanager create-secret \
 
 ```bash
 aws secretsmanager create-secret \
-    --name "toggle/service_api_key" \
+    --name "fiap-toggle/service_api_key" \
     --description "Chave de serviço para o microserviço Evaluation" \
     --secret-string '{"password": "teste"}'
 ```
