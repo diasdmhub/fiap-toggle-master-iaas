@@ -132,6 +132,19 @@ aws secretsmanager create-secret \
 
 <BR>
 
+#### Token do microserviço Evaluation
+
+> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere o exemplo "admin123" para algo mais complexo e seguro.**
+
+```bash
+aws secretsmanager create-secret \
+    --name "toggle/service_api_key" \
+    --description "Chave de serviço para o microserviço Evaluation" \
+    --secret-string '{"password": "teste"}'
+```
+
+<BR>
+
 ## Configuração Helm
 
 O Helm é utilizado nesta implementação para facilitar a instalação de recursos acessórios ao ambiente Kubernetes. Diversas das distribuições disponibilizam pacotes de instalação do Helm por meio de seus gerenciadores de pacotes. Por exemplo:
