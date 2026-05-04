@@ -121,7 +121,7 @@ aws secretsmanager create-secret \
 
 #### MasterKey do microserviço Auth
 
-> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere "admin123" para um valor mais complexo e seguro.**
+> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere o exemplo "admin123" para algo mais complexo e seguro.**
 
 ```bash
 aws secretsmanager create-secret \
