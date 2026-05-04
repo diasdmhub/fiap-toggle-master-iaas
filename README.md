@@ -94,7 +94,7 @@ Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais se
 aws secretsmanager create-secret \
     --name "fiap-toggle/rds" \
     --description "URL de conexão do banco de dados PostgreSQL" \
-    --secret-string "{\"password\": \"$(terraform output -json rds_outputs | jq -r .rds_connection_url)\"}"
+    --secret-string "{\"db_url\": \"$(terraform output -json rds_outputs | jq -r .rds_connection_url)\"}"
 ```
 
 #### SQS URL
@@ -103,7 +103,7 @@ aws secretsmanager create-secret \
 aws secretsmanager create-secret \
     --name "fiap-toggle/sqs" \
     --description "URL da fila SQS da AWS" \
-    --secret-string "{\"password\": \"$(terraform output -json sqs_outputs | jq -r .sqs_queue_url)\"}"
+    --secret-string "{\"queue_url\": \"$(terraform output -json sqs_outputs | jq -r .sqs_queue_url)\"}"
 ```
 
 <BR>
@@ -114,7 +114,7 @@ aws secretsmanager create-secret \
 aws secretsmanager create-secret \
     --name "fiap-toggle/redis_url" \
     --description "URL do seu AWS ElastiCache com o schema rediss://" \
-    --secret-string "{\"password\": \"$(terraform output -json cache_outputs | jq -r .elasticache_valkey_connection_string)\"}"
+    --secret-string "{\"redis_url\": \"$(terraform output -json cache_outputs | jq -r .elasticache_valkey_connection_string)\"}"
 ```
 
 <BR>
@@ -140,7 +140,7 @@ aws secretsmanager create-secret \
 aws secretsmanager create-secret \
     --name "fiap-toggle/service_api_key" \
     --description "Chave de serviço para o microserviço Evaluation" \
-    --secret-string '{"password": "teste"}'
+    --secret-string '{"api_key": "teste"}'
 ```
 
 <BR>
