@@ -1,6 +1,4 @@
-######################
-# Principais outputs #
-######################
+# Outputs de todos os módulos
 output "vpc_outputs" {
   value       = module.vpc
   description = "Outputs do modulo VPC"
@@ -55,4 +53,9 @@ output "es_outputs" {
 output "keda_outputs" {
   value       = module.keda
   description = "Outputs do modulo Keda"
+}
+
+output "secrets_outputs" {
+  value       = module.secrets
+  description = "Outputs do modulo Secrets"
 }
