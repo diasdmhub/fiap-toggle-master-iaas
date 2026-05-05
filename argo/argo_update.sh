@@ -2,7 +2,7 @@
 
 # 1. Validação de requisitos
 missing=()
-for cmd in jq argocd aws; do
+for cmd in git jq argocd aws; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         missing+=("$cmd")
     fi

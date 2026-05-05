@@ -91,14 +91,14 @@ resource "aws_eks_node_group" "main" {
   node_group_name = "${var.name_prefix}-eks-cluster-nodes"
   node_role_arn   = aws_iam_role.eks_nodes.arn
 
-  # Nodes na subnet pública
-  subnet_ids = var.public_subnet_ids
+  # Nodes na subnet privada
+  subnet_ids = var.private_subnet_ids
 
   instance_types = ["t3.small"]
   disk_size      = 20
 
   scaling_config {
-    desired_size = 2
+    desired_size = 3
     min_size     = 1
     max_size     = 4
   }
