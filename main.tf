@@ -121,3 +121,14 @@ module "sa" {
 
   depends_on = [module.eks]
 }
+
+module "secrets" {
+  source                   = "./modules/secrets"
+
+  name_prefix              = var.name_prefix
+  rds_connection_url       = module.rds.rds_connection_url
+  sqs_queue_url            = module.sqs.sqs_queue_url
+  valkey_connection_string = module.cache.elasticache_valkey_connection_string
+
+  depends_on               = [module.rds, module.sqs, module.cache]
+}
