@@ -28,16 +28,18 @@ Para a implementação inicial, alguns dados precisam ser configurados para perm
 
 #### 1.1 Variáveis Terraform
 
-O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do Terraform. Já existem alguns valores pré-definidos, mas é **altamente recomendado que as variáveis abaixo sejam definidas ou alteradas**:
+O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do Terraform. É disponibilizado um arquivo de exemplo (`terraform.tfvars.example`) com alguns valores pré-definidos, mas é **altamente recomendado que as variáveis abaixo sejam definidas de acordo com o ambiente**.
 
-- `name_prefix` - Prefixo do nome dos recursos _(default "fiap-toggle")
-- `aws_region` - Regiao da AWS _(default "us-east-1")_
-- `subnet_prefix` - Os 2 primeiros octetos do CIDR da VPC _(default "10.12")_
-- `db_name` - Nome do banco de dados inicial no RDS _(vazio por padrão)_
-- `db_username` - Usuário master do PostgreSQL _(vazio por padrão)_
-- `db_password` - Senha do usuário master _(vazio por padrão)_
-- `git_org` - Domínio provedor Git _(vazio por padrão)_
-- `git_repo` - Repositório do provedor Git _(vazio por padrão)_
+| Variável | Descrição | Default |
+| :---: | :--- | :--- |
+| `name_prefix` | Prefixo do nome dos recursos _ | _`fiap-toggle`_ |
+| `aws_region` | Regiao da AWS | _`us-east-1`_ |
+| `subnet_prefix` | Os 2 primeiros octetos do CIDR da VPC | _`10.12`_ |
+| `db_name` | Nome do banco de dados inicial no RDS | _vazio por padrão_ |
+| `db_username` | Usuário master do PostgreSQL | _vazio por padrão_ |
+| `db_password` | Senha do usuário master | _vazio por padrão_ |
+| `git_org` | Domínio provedor Git | _vazio por padrão_ |
+| `git_repo` | Repositório do provedor Git | _vazio por padrão_ |
 
 Copie o arquivo de exemplo e edite ele com os valores do seu ambiente.
 
@@ -49,9 +51,9 @@ cp terraform.tfvars.example terraform.tfvars
 
 ### 2. Inicialização AWS
 
-Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza a AWS para a persistência do estado da infraestrutura e configuração criada. O **S3 Bucket** é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o **DynamoDB** para armazenar a "state lock" e evitar modificações concorrentes.
+Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza serviços extras da AWS para a persistência do estado da infraestrutura e configuração criada. O **S3 Bucket** é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o **DynamoDB** para armazenar a "state lock" e evitar modificações concorrentes.
 
-Esses serviços "extras" precisam ser configurados antes da inicialização do Terraform, de modo a permitir que ele crie a persistência do estado da configuração. Portanto, foi criado o script [`init.sh`][init] para configurar o ambiente antes de inicializar o Terraform. Ele deve ser executado na raiz do repositório.
+Esses serviços "extras" precisam ser configurados antes da inicialização do Terraform, de modo a permitir que ele crie a persistência do estado da configuração. Portanto, foi criado o script [`init.sh`][init] para configurar o ambiente na AWS antes de inicializar o Terraform. Ele deve ser executado na raiz do repositório.
 
 ```bash
 ./init.sh
@@ -64,7 +66,7 @@ terraform plan
 terraform apply
 ```
 
-> A criação dos recursos pode levar alguns minutos, principalmente por causa do cluster EKS e seus nodes. Ao final, será apresentada uma mensagem indicando o término da implementação seguido dos outputs gerados.
+> A criação dos recursos pode levar alguns minutos, principalmente por causa do cluster EKS e seus nodes. Ao final, será apresentada uma mensagem indicando o término da implementação seguido dos outputs gerados. Algo similar à mensagem abaixo.
 
 > ```
 > Apply complete! Resources: 69 added, 0 changed, 0 destroyed.
@@ -72,10 +74,12 @@ terraform apply
 
 ### 2.1 Configuração `kubectl`
 
-Após a criação do cluster EKS, é necessário atualizar a configuração do `kubectl` para o acesso ao cluster. Utilize o comando abaixo para isso.
+Após a criação dos recursos na AWS, o cluster EKS deve estar disponível. É necessário atualizar a configuração do `kubectl` para o acesso ao cluster. Utilize o comando abaixo para isso.
+
+> Altere a região 
 
 ```bash
-aws eks update-kubeconfig --region us-east-1 --name fiap-toggle-eks-cluster
+aws eks update-kubeconfig --region $(aws configure get region) --name fiap-toggle-eks-cluster
 ```
 
 <BR>

@@ -4,6 +4,7 @@
 resource "aws_secretsmanager_secret" "rds" {
   name        = "${var.name_prefix}/rds"
   description = "URL completa de conexão PostgreSQL pronta para uso"
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${var.name_prefix}-secret-rds"
@@ -21,6 +22,7 @@ resource "aws_secretsmanager_secret_version" "rds" {
 resource "aws_secretsmanager_secret" "sqs" {
   name        = "${var.name_prefix}/sqs"
   description = "URL da fila SQS"
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${var.name_prefix}-secret-sqs"
@@ -38,6 +40,7 @@ resource "aws_secretsmanager_secret_version" "sqs" {
 resource "aws_secretsmanager_secret" "valkey" {
   name        = "${var.name_prefix}/redis_url"
   description = "String de conexão completa para o Valkey"
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${var.name_prefix}-secret-valkey"
