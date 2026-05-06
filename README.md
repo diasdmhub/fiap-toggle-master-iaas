@@ -236,6 +236,7 @@ kubectl apply -f argo/argo_deploy.yaml
 - A verificação de vulnerabilidades da imagem pode ser realiza na AWS, no entanto, podem haver custos implícitos.
 
 - Considerando que o objetivo desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
+- Devido ao volume de serviços implementados no cluster EKS, a quantidade de pods pode ser um pouco elevada, considerando serviços como o Keda, Helm, ArgoCD, o próprio cluster, etc. Portanto, é interessante definir uma instância EC2 da AWS que permita um número maior de alocações de IPs. Neste projeto, foi utilizada a instância `m7i-flex.large`.
 
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/

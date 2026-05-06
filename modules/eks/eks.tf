@@ -95,7 +95,7 @@ resource "aws_eks_node_group" "main" {
   subnet_ids = var.private_subnet_ids
 
   instance_types = ["m7i-flex.large"]
-  disk_size      = 10
+  disk_size      = 20
 
   scaling_config {
     desired_size = 2
