@@ -236,7 +236,7 @@ kubectl apply -f argo/argo_deploy.yaml
 - A verificação de vulnerabilidades da imagem pode ser realiza na AWS, no entanto, podem haver custos implícitos.
 
 - Considerando que o objetivo desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
-- Devido ao volume de serviços implementados no cluster EKS, a quantidade de pods pode ser um pouco elevada, considerando serviços como o Keda, Helm, ArgoCD, o próprio cluster, etc. Portanto, é interessante definir uma instância EC2 da AWS que permita um número maior de alocações de IPs. Neste projeto, foi utilizada a instância `m7i-flex.large`.
+- Devido ao volume de serviços implementados no cluster EKS, considerando serviços como o Keda, Helm, ArgoCD, External Secrets, o próprio cluster, e a ToggleMaster, a quantidade de pods pode ser um pouco elevada. No Kubernetes, cada pod recebe um endereço IP privado. Portanto, é necessário definir uma instância EC2 da AWS que permita um número maior de [alocações de IPs por interface][ipalloc]. Neste projeto, foi utilizada a instância `m7i-flex.large` que é elegível como "_free tier_" e permite até 10 alocações de IPs.
 
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
@@ -253,3 +253,4 @@ kubectl apply -f argo/argo_deploy.yaml
 [evalserv]: https://github.com/FIAP-TCs/evaluation-service
 [analyticserv]: https://github.com/FIAP-TCs/analytics-service
 [tfvars]: #11-vari%C3%A1veis-terraform
+[ipalloc]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AvailableIpPerENI.html
