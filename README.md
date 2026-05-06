@@ -14,11 +14,11 @@ O projeto da ToggleMaster com IaaS é composto de alguns recursos principais: os
 
 O sistema ToggleMaster é segmentado em 5 microsserviços altamente integrados entre si. São eles [`auth-service`][authserv], [`flag-service`][flagserv], [`targeting-service`][targetserv], [`evaluation-service`][evalserv] e [`analytics-service`][analyticserv], cada um com seu respectivo repositório original criado pela FIAP.
 
-Os microserviços são executados em um _cloud provider_, a AWS, de modo a permitir alta flexibilidade, escalabilidade e segurança para o sistema. A infraestrutura da AWS é implementada com o Terraform, e foi segmentada em módulos a fim de automatizar e modularizar a criação do ambiente.
+Os microserviços são executados em um _cloud provider_, a AWS, de modo a permitir alta flexibilidade, escalabilidade e segurança para o sistema. A infraestrutura da AWS é implementada com o Terraform, e foi segmentada em módulos a fim de automatizar e flexibilizar a criação do ambiente.
 
-Com o ambiente AWS criado, os microserviços, então, são executados em um cluster Kubernetes, o EKS da AWS. Diversos manifestos K8s foram criados para definir como o sistema ToggleMaster deve ser executado e escalado no ambiente. No cluster também é implementado o ArgoCD para que o _deploy_ seja automatizado e sincronizado com o repositório Git.
+Com o ambiente AWS criado, os microserviços, então, são executados em um cluster Kubernetes (K8s), o EKS da AWS. Diversos manifestos K8s foram criados para definir como o sistema ToggleMaster deve ser executado e escalado no ambiente. No cluster também é implementado o ArgoCD para que o _deploy_ seja automatizado e sincronizado com o repositório Git.
 
-De forma bem simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
+De forma simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
 
 ```mermaid
 flowchart LR
@@ -116,7 +116,9 @@ Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais se
 
 #### MasterKey do microserviço Auth
 
-> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere o valor de exemplo "_admin123_" para algo mais complexo e seguro.**
+É necessário definir uma chave "mestre" para o microserviço de autenticação Auth.
+
+> **Altere o valor de exemplo _`admin123`_ para algo mais complexo e seguro.**
 
 ```bash
 aws secretsmanager create-secret \
@@ -129,7 +131,9 @@ aws secretsmanager create-secret \
 
 #### Token do microserviço Evaluation
 
-> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Só é possível gerar essa chave após a inicialização do microserviço Auth. Altere o valor de exemplo "teste" para algo mais complexo e seguro.**
+É necessário definir um _token_ para o microserviço Evaluation. No entanto, só é possível gerar essa chave após a inicialização do microserviço Auth.
+
+> **Altere o valor de exemplo _`teste`_ para algo mais complexo e seguro.**
 
 ```bash
 aws secretsmanager create-secret \
@@ -142,15 +146,19 @@ aws secretsmanager create-secret \
 
 ## 3. Build da ToggleMaster
 
+Com o ambiente AWS criado, os microserviços da ToggleMaster já podem ser enviados ao repositório de imagens ECR. Elas são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, basta submeter um novo _push_ ou _pull request_ em qualquer arquivo do diretório `build`, que workflow é disparada. Alternativamente, principalmente para o primeiro build, também é possível acionar o workflow manualmente.
+
 <BR>
 
-## 3. Configuração ArgoCD
+## 4. Configuração ArgoCD
 
 Esta implementação utiliza o ArgoCD para que a ToggleMaster seja atualizada dinamicamente no cluster EKS. O plano do Terraform já está preparado para instalar o ArgoCD, ficando acessível ao cluster. Entretanto, podem ser necessários alguns ajustes após a disponibilização da aplicação.
 
-### 3.1 Interface do ArgoCD
+<BR>
 
-O ArgoCD é configurado por padrão criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de variáveis do Terraform (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
+### 4.1 Interface do ArgoCD
+
+O ArgoCD é configurado por padrão criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de [variáveis do Terraform][tfvars] (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
 
 #### ClusterIP
 
@@ -168,7 +176,9 @@ Caso tenha configurado o serviço como `LoadBalancer`, o _cloud provider_ dispon
 kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
-### 3.2 Senha inicial
+<BR>
+
+### 4.2 Senha inicial do ArgoCD
 
 O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` e retorna a senha em texto-claro.
 
@@ -176,9 +186,25 @@ O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inic
 kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-### 3.3 Registrar o cluster
+### 4.3 Registrar o cluster
 
-Este passo registra as credenciais do cluster K8s no ArgoCD e só necessário ao utilizar o ArgoCD em um cluster externo.
+As credenciais do cluster K8s devem ser registradas no ArgoCD e isso **só é necessário ao utilizar o ArgoCD em um cluster externo.**
+
+> **Estes passos utilizam o [_ArgoCD client_][argocdcli]. Caso esteja utilizando o serviço do tipo ClusterIP, é necessário fazer o _port-forward_ primeiro. Se o serviço for do tipo LoadBalancer, utilize o _endpoint_ criado pelo _cloud provider_.**
+
+1. Faça o login no ArgoCD pelo terminal.
+
+```bash
+argocd login [servidor:porta]
+```
+
+2. Verifique se o ArgoCD está registrado no cluster EKS. Normalmente, essa verificação deve indicar o valor, conforme abaixo.
+
+```bash
+argocd cluster list
+```
+
+> **Execute o próximo passo somente se o ArgoCD não se conectar ao cluster EKS corretamente.**
 
 <BR>
 
@@ -210,7 +236,6 @@ kubectl apply -f argo/argo_deploy.yaml
 - A verificação de vulnerabilidades da imagem pode ser realiza na AWS, no entanto, podem haver custos implícitos.
 
 - Considerando que o objetivo desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
-- 
 
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
@@ -226,3 +251,4 @@ kubectl apply -f argo/argo_deploy.yaml
 [targetserv]: https://github.com/FIAP-TCs/targeting-service
 [evalserv]: https://github.com/FIAP-TCs/evaluation-service
 [analyticserv]: https://github.com/FIAP-TCs/analytics-service
+[tfvars]: #11-vari%C3%A1veis-terraform

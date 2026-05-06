@@ -94,11 +94,11 @@ resource "aws_eks_node_group" "main" {
   # Nodes na subnet privada
   subnet_ids = var.private_subnet_ids
 
-  instance_types = ["t3.small"]
-  disk_size      = 20
+  instance_types = ["m7i-flex.large"]
+  disk_size      = 10
 
   scaling_config {
-    desired_size = 3
+    desired_size = 2
     min_size     = 1
     max_size     = 4
   }
