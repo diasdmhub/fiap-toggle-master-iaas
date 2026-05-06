@@ -6,17 +6,38 @@ Nesta fase, o projeto propõe a criação **automática** de um ambiente distrib
 
 <BR>
 
+## 🏗️ Arquitetura
+
+A ToggleMaster é uma solução que permite ativar ou desativar features em produção sem a necessidade de um novo deploy. Ela foi criada de uma forma para que times de desenvolvimento possam lançar novas funcionalidades de forma segura e controlada.
+
+O projeto da ToggleMaster com IaaS é composto de alguns recursos principais: os **microserviços**, a **infraestrutura _cloud_** e os **módulos do Kubernetes**. Esses recusos são integrados por meio de algumas ferramentas que também estão descritas neste repositório.
+
+O sistema ToggleMaster é segmentado em 5 microsserviços altamente integrados entre si. São eles [`auth-service`][authserv], [`flag-service`][flagserv], [`targeting-service`][targetserv], [`evaluation-service`][evalserv] e [`analytics-service`][analyticserv], cada um com seu respectivo repositório original criado pela FIAP.
+
+Os microserviços são executados em um _cloud provider_, a AWS, de modo a permitir alta flexibilidade, escalabilidade e segurança para o sistema. A infraestrutura da AWS é implementada com o Terraform, e foi segmentada em módulos a fim de automatizar e modularizar a criação do ambiente.
+
+Com o ambiente AWS criado, os microserviços, então, são executados em um cluster Kubernetes, o EKS da AWS. Diversos manifestos K8s foram criados para definir como o sistema ToggleMaster deve ser executado e escalado no ambiente. No cluster também é implementado o ArgoCD para que o _deploy_ seja automatizado e sincronizado com o repositório Git.
+
+De forma bem simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
+
+```mermaid
+flowchart LR
+    A(Build) -->|Git Actions| B(AWS)
+    B -->|Terraform| C(K8s)
+```
+
+<BR>
+
 ## 🔑 Prerequisitos
 
 - Faça um **"_fork_" deste repositório** a fim de executar o CI workflow. Ele é utilizado principalmente para enviar as imagens dos microserviços ao AWS ECR;
 - O serviço de **"_Actions_" precisa estar habilitado** no repositório;
-- Copie o código-fonte do repositório. Recomenda-se **clonar o repositório com o Git**:
+- Copie o código-fonte do repositório para um dispositivo de desenvolvimento. Recomenda-se **clonar o repositório com o Git**:
     - `git clone https://github.com/SUA_CONTA/FORK_DO_REPO.git && cd FORK_DO_REPO`;
 - O terminal local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli];
 - É necessário [**instalar o Terraform**][terraform] para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster;
 - O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
-- O [`helm`][helm] também pode ser utilizado neste cenário ao aplicar os [ExternalSecrets (ClusterSecretStore)][extsecret].
-- _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado para auxiliar as configurações da ToggleMaster no cluster. Abaixo são oferecidos alguns scripts que utilizam ele.
+- _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado para auxiliar as configurações da ToggleMaster no cluster. Na implementação são oferecidos alguns scripts que utilizam ele.
 
 <BR>
 
@@ -35,23 +56,24 @@ O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do T
 | `name_prefix` | Prefixo do nome dos recursos _ | _`fiap-toggle`_ |
 | `aws_region` | Regiao da AWS | _`us-east-1`_ |
 | `subnet_prefix` | Os 2 primeiros octetos do CIDR da VPC | _`10.12`_ |
-| `db_name` | Nome do banco de dados inicial no RDS | _vazio por padrão_ |
-| `db_username` | Usuário master do PostgreSQL | _vazio por padrão_ |
-| `db_password` | Senha do usuário master | _vazio por padrão_ |
-| `git_org` | Domínio provedor Git | _vazio por padrão_ |
-| `git_repo` | Repositório do provedor Git | _vazio por padrão_ |
+| `db_name` | Nome do banco de dados inicial no RDS | _vazio_ |
+| `db_username` | Usuário master do PostgreSQL | _vazio_ |
+| `db_password` | Senha do usuário master | _vazio_ |
+| `git_org` | Domínio provedor Git | _vazio_ |
+| `git_repo` | Repositório do provedor Git | _vazio_ |
 
 Copie o arquivo de exemplo e edite ele com os valores do seu ambiente.
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
+# [vi]/[nano] terraform.tfvars
 ```
 
 <BR>
 
 ### 2. Inicialização AWS
 
-Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza serviços extras da AWS para a persistência do estado da infraestrutura e configuração criada. O **S3 Bucket** é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o **DynamoDB** para armazenar a "state lock" e evitar modificações concorrentes.
+Para a estruturação do ambiente AWS, é utilizado o **Terraform**. Ele faz a configuração de todos os recursos utilizados pela ToggleMaster, como o EKS, Elasticache, DynamoDB, etc. Além de implementar os serviços, ele também utiliza serviços extras da AWS para a persistência do estado da infraestrutura e configuração criada. O **S3 Bucket** é utilizado para armazenar o arquivo `terraform.tfstate` que "mapeia" a configuração com o recursos criados no _Cloud Provider_. O Terraform também utiliza o **DynamoDB** para armazenar o "_state lock_" e evitar modificações concorrentes.
 
 Esses serviços "extras" precisam ser configurados antes da inicialização do Terraform para que ele crie a persistência do estado da configuração. Portanto, o script [`init.sh`][init] está disponível para configurar o ambiente na AWS e inicializar o Terraform em seguida. Ele deve ser executado na raiz do repositório.
 
@@ -88,13 +110,13 @@ aws eks update-kubeconfig --region $(aws configure get region) --name "$(grep '^
 
 ### 2.2 Configuração de credenciais
 
-Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais sensíveis só podem ser definidos após a criação da infraestrutura na AWS. Para isso, é utilizado o gerenciador de segredos da AWS (_AWS Secrets Manager_). Alguns valores são extraídos dos outputs do Terraform, outros são definidos manualmente. Eles são considerados sensíveis para evitar a exposição em repositórios públicos.
+Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais sensíveis só podem ser definidos após a criação da infraestrutura na AWS. Para isso, é utilizado o gerenciador de segredos da AWS (_AWS Secrets Manager_). Alguns valores são extraídos dos outputs do Terraform, outros devem ser definidos manualmente. Eles são considerados sensíveis para evitar a exposição em repositórios públicos.
 
 ⚠️ Note que os secrets criados abaixo utilizam o namespace igual ao prefixo do nome dos recursos utilizados no Terraform ("_fiap-toggle_" por padrão). Altere caso utilize outro nome.
 
 #### MasterKey do microserviço Auth
 
-> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere o valor de exemplo "admin123" para algo mais complexo e seguro.**
+> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Altere o valor de exemplo "_admin123_" para algo mais complexo e seguro.**
 
 ```bash
 aws secretsmanager create-secret \
@@ -107,7 +129,7 @@ aws secretsmanager create-secret \
 
 #### Token do microserviço Evaluation
 
-> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Só é possível gerar essa chave após a inicialização do microserviço Auth. Altere o exemplo "admin123" para algo mais complexo e seguro.**
+> **É necessário definir uma chave "mestre" para o microserviço de autenticação Auth. Só é possível gerar essa chave após a inicialização do microserviço Auth. Altere o valor de exemplo "teste" para algo mais complexo e seguro.**
 
 ```bash
 aws secretsmanager create-secret \
@@ -118,61 +140,62 @@ aws secretsmanager create-secret \
 
 <BR>
 
-## Configuração Helm
-
-O Helm é utilizado nesta implementação para facilitar a instalação de recursos acessórios ao ambiente Kubernetes. Diversas das distribuições disponibilizam pacotes de instalação do Helm por meio de seus gerenciadores de pacotes. Por exemplo:
-
-```bash
-dnf install helm
-```
-
-Também é possível instalar a versão mais recente do Helm a partir de seu repositório público.
-
-```bash
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
-```
-
-> O Helm não é necessário para a implementação da infraestrutura da ToggleMaster, mas é recomendado.
-
-<BR>
-
-### 2.3 Configuração External Secrets
-
-Com o Helm instalado, deve-se instalar o recurso de External Secrets de modo a permitir que as variáveis sensíveis do sistema ToggleMaster sejam armazenadas em um repositório seguro. Neste caso, a instalação do External Secrets é realizada com os comandos abaixo.
-
-```bash
-helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
-```
-
-<BR>
-
-### 2.4 Configuração Keda
-
-Outro recurso extra da ToggleMaster, é o Keda que é utilizado para escalonar o microserviço `analytics-service`, de modo que seus pods aumentem caso o tamanho da fila SQS aumente significativamente.
-
-Para instalar o KEDA, basta aplicar seu manifesto, conforme [indicado em sua documentação][keda].
-
-```bash
-kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.19.0/keda-2.19.0.yaml
-```
+## 3. Build da ToggleMaster
 
 <BR>
 
 ## 3. Configuração ArgoCD
 
-Para esta implementação é utlizado o ArgoCD para que a ToggleMaster seja atualizada dinamicamente no EKS. O plano do Terraform já está preparado para instalar o ArgoCD no cluster e ele deve estar acessível após essa
+Esta implementação utiliza o ArgoCD para que a ToggleMaster seja atualizada dinamicamente no cluster EKS. O plano do Terraform já está preparado para instalar o ArgoCD, ficando acessível ao cluster. Entretanto, podem ser necessários alguns ajustes após a disponibilização da aplicação.
+
+### 3.1 Interface do ArgoCD
+
+O ArgoCD é configurado por padrão criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de variáveis do Terraform (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
+
+#### ClusterIP
+
+Com o serviço do tipo `ClusterIP`, pode-se acessar a interface do ArgoCD utilizando o `port-forward` do Kubernetes, como no exemplo abaixo.
+
+```bash
+kubectl port-forward service/argocd-server -n argocd --address 0.0.0.0 8080:443
+```
+
+#### LoadBalancer
+
+Caso tenha configurado o serviço como `LoadBalancer`, o _cloud provider_ disponibilizará um _endpoint_ público para acesso à interface. Pode-se obter o _endpoint_ com o comando abaixo.
+
+```bash
+kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+### 3.2 Senha inicial
+
+O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` e retorna a senha em texto-claro.
+
+```bash
+kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+### 3.3 Registrar o cluster
+
+Este passo registra as credenciais do cluster K8s no ArgoCD e só necessário ao utilizar o ArgoCD em um cluster externo.
 
 <BR>
 
-## 3. Configuração ToggleMaster
+## 4. Configuração ToggleMaster
 
-Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com as configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
+Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com algumas configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
 
-Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. O script `toggle_deploy.sh` facilita o preenchimento dos valores corretos no arquivo.
+Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform. O script `argo_update.sh` facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. Alternativamente, também é possível editar manualmente o arquivo de exemplo.
 
 ```bash
-toggle_deploy.sh
+./argo/argo_update.sh
+```
+
+**O novo arquivo `argo_deploy.yaml` será responsável por definir a sincronização do repositório com o Kubernetes e deve ser aplicado conforme o comando abaixo.**
+
+```bash
+kubectl apply -f argo/argo_deploy.yaml
 ```
 
 <BR>
@@ -198,3 +221,8 @@ toggle_deploy.sh
 [extsecret]: https://external-secrets.io/
 [argocdcli]: https://argo-cd.readthedocs.io/en/stable/cli_installation/
 [keda]: https://keda.sh/docs/2.19/deploy/#yaml
+[authserv]: https://github.com/FIAP-TCs/auth-service
+[flagserv]: https://github.com/FIAP-TCs/flag-service
+[targetserv]: https://github.com/FIAP-TCs/targeting-service
+[evalserv]: https://github.com/FIAP-TCs/evaluation-service
+[analyticserv]: https://github.com/FIAP-TCs/analytics-service
