@@ -155,7 +155,8 @@ jobs:
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           go run . > gorun.log 2>&1 &
-          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
+          echo "### Resultado do teste unitário: " >> $GITHUB_STEP_SUMMARY
+          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i"; exit 1 } done
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -173,7 +174,8 @@ jobs:
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
-          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" && exit 0 || echo "Health FAIL - $i"; done
+          echo "### Resultado do teste unitário: " >> $GITHUB_STEP_SUMMARY
+          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i"; exit 1 } done
 
       # 5. SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
       # Fixa as versões do requirements para o Trivy
@@ -305,12 +307,6 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      # - name: Instalar o AWS CLI
-      #   run: |
-      #     curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #     unzip -q awscliv2.zip
-      #     ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
-
       # OIDC praticamente não funcional fora do GitHub
       - name: Configurar credenciais AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
@@ -324,21 +320,6 @@ jobs:
       - name: Login no AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      # # Acesso com Access Key para instâncias self-hosted isoladas
-      # - name: Configurar credenciais AWS
-      #   uses: aws-actions/configure-aws-credentials@v6
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ secrets.AWS_REGION }}
-
-      # # Necessário pois a action da aws não parece funcional fora do GitHub
-      # - name: Login no AWS ECR
-      #   run: |
-      #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-      #     | docker login --username AWS --password-stdin \
-      #       ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
@@ -369,15 +350,3 @@ jobs:
       #     git add "kube/0*0-${{ matrix.service }}/*-deployment.yaml"
       #     git commit -m "Update da imagem do serviço ${{ matrix.service }} para v${{ env.TAG_VERSION }}-${SHORT_SHA}"
       #     git push origin ${{ github.ref }}
-
-      # # 4. Push para o AWS ECR
-      # - name: Push do microserviço ao ECR
-      #   uses: docker/build-push-action@v7
-      #   with:
-      #     context: ./build
-      #     file: ./${{ matrix.dockerfile }}
-      #     push: true
-      #     cache-from: type=gha
-      #     tags: |
-      #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:v${{ env.TAG_VERSION }}-${{ env.SHORT_SHA }}
-      #       ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repo }}:latest
