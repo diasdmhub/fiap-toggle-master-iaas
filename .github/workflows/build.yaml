@@ -264,8 +264,6 @@ jobs:
       # 2. Docker Build
       - name: Setup do Docker Buildx
         uses: docker/setup-buildx-action@v4
-        with:
-          driver: docker
 
       - name: Build do microserviço
         uses: docker/build-push-action@v7
@@ -312,6 +310,12 @@ jobs:
           curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip -q awscliv2.zip
           ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+
+      # # Login no AWS ECR
+      # # Não funcional fora do GitHub
+      # - name: Login no AWS ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
 
       # # OIDC praticamente não funcional fora do GitHub
       # - name: Configurar credenciais AWS (OIDC)
@@ -366,12 +370,6 @@ jobs:
       #     git add "kube/0*0-${{ matrix.service }}/*-deployment.yaml"
       #     git commit -m "Update da imagem do serviço ${{ matrix.service }} para v${{ env.TAG_VERSION }}-${SHORT_SHA}"
       #     git push origin ${{ github.ref }}
-
-      # # Login no AWS ECR
-      # # Não funcional fora do GitHub
-      # - name: Login no AWS ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
 
       # # 4. Push para o AWS ECR
       # - name: Push do microserviço ao ECR
