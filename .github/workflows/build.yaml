@@ -313,7 +313,6 @@ jobs:
 
       # OIDC praticamente não funcional fora do GitHub
       - name: Configurar credenciais AWS (OIDC)
-        id: login-ecr
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
