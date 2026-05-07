@@ -148,7 +148,7 @@ aws secretsmanager create-secret \
 
 ## 3. Build da ToggleMaster
 
-Com o ambiente AWS criado, os microserviços da ToggleMaster podem ser enviados ao repositório de imagens ECR. Elas são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, basta submeter um novo _push_ ou _pull request_ em qualquer arquivo do diretório `build`, que workflow é disparada. Alternativamente, principalmente para o primeiro build, também é possível acionar o workflow manualmente.
+Com o **ambiente AWS criado e os repositório ECR disponíveis**, os microserviços da ToggleMaster podem ser enviados ao repositório de imagens ECR. As imagens do microserviços são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, **basta submeter um novo "_push_" ou "_pull request_" em qualquer arquivo do diretório `build`**, que workflow é disparada. Alternativamente, principalmente para o primeiro build, **também é possível acionar o workflow manualmente**.
 
 <BR>
 
@@ -156,9 +156,7 @@ Com o ambiente AWS criado, os microserviços da ToggleMaster podem ser enviados 
 
 Antes de executar o workflow, é necessário definir algumas variáveis sensíveis que serão utilizadas nos passos do workflow.
 
-Essas variáveis são exclusivas para a conexão do cluster com a AWS. Também são definidas as variáveis para  
-
-Para isso, deve-se definir os valores abaixo.
+Essas variáveis são exclusivas para a conexão do GitHub com a AWS. Para isso, deve-se definir os valores abaixo como "**secrets**" no repositório.
 
 | Variável        | Descrição                             |
 | :-------------: | :------------------------------------ |
