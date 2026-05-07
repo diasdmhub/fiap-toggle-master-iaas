@@ -47,6 +47,8 @@ resource "aws_subnet" "public" {
     Name = "${var.name_prefix}-subnet-pub-${var.public_subnet_nums[count.index]}"
     Tier = "public"
     AZ   = local.cp_azs[count.index]
+    "kubernetes.io/role/elb"                               = "1"
+    "kubernetes.io/cluster/${var.name_prefix}-eks-cluster" = "shared"
   }
 }
 
@@ -62,6 +64,8 @@ resource "aws_subnet" "private" {
     Name = "${var.name_prefix}-subnet-priv-${var.private_subnet_nums[count.index]}"
     Tier = "private"
     AZ   = local.cp_azs[count.index]
+    "kubernetes.io/role/internal-elb"                      = "1"
+    "kubernetes.io/cluster/${var.name_prefix}-eks-cluster" = "shared"
   }
 }
 
@@ -120,4 +124,34 @@ resource "aws_route_table_association" "private" {
   count          = length(local.cp_azs)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+# Elastic IP para o NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.name_prefix}-nat-eip"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# NAT Gateway na subnet pública
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id  # Coloca em uma subnet pública
+
+  tags = {
+    Name = "${var.name_prefix}-nat-gw"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# Rota default na route table privada via NAT Gateway
+resource "aws_route" "private_internet_access" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
 }
