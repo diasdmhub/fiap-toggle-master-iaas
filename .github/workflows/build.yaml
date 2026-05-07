@@ -112,8 +112,8 @@ jobs:
       # 3. Linter / Análise Estática
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
-        # env:
-        #   GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
+        env:
+          GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: "latest"
@@ -205,11 +205,10 @@ jobs:
       # 6. SAST específico por linguagem (não bloqueia automaticamente)
       - name: SAST - gosec (Go)
         if: matrix.language == 'go'
-        working-directory: ${{ matrix.code_dir }}
         continue-on-error: true
         uses: securego/gosec@master
         with:
-          args: ./...
+          args: "./${{ matrix.code_dir }}/..."
 
       # Usa o Bandit diretamente pois não precisa de autenticação no Github para o relatório
       - name: SAST - bandit (Python)
