@@ -51,6 +51,8 @@ Para a implementação inicial, alguns dados precisam ser configurados para perm
 
 O arquivo `terraform.tfvars` deve ser definido com as principais variáveis do Terraform. É disponibilizado um arquivo de exemplo (`terraform.tfvars.example`) com alguns valores pré-definidos, mas é **altamente recomendado que as variáveis abaixo sejam definidas de acordo com o ambiente**.
 
+> ⚠️ **Note que este arquivo possui dados sensíveis e deve ter seu acesso restrito.**
+
 | Variável | Descrição | Default |
 | :---: | :--- | :--- |
 | `name_prefix` | Prefixo do nome dos recursos _ | _`fiap-toggle`_ |
@@ -146,7 +148,23 @@ aws secretsmanager create-secret \
 
 ## 3. Build da ToggleMaster
 
-Com o ambiente AWS criado, os microserviços da ToggleMaster já podem ser enviados ao repositório de imagens ECR. Elas são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, basta submeter um novo _push_ ou _pull request_ em qualquer arquivo do diretório `build`, que workflow é disparada. Alternativamente, principalmente para o primeiro build, também é possível acionar o workflow manualmente.
+Com o ambiente AWS criado, os microserviços da ToggleMaster podem ser enviados ao repositório de imagens ECR. Elas são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, basta submeter um novo _push_ ou _pull request_ em qualquer arquivo do diretório `build`, que workflow é disparada. Alternativamente, principalmente para o primeiro build, também é possível acionar o workflow manualmente.
+
+<BR>
+
+### 3.1 Secrets para o build
+
+Antes de executar o workflow, é necessário definir algumas variáveis sensíveis que serão utilizadas nos passos do workflow.
+
+Essas variáveis são exclusivas para a conexão do cluster com a AWS. Também são definidas as variáveis para  
+
+Para isso, deve-se definir os valores abaixo.
+
+| Variável        | Descrição                             |
+| :-------------: | :------------------------------------ |
+| `AWS_ACC_ID`    | ID da conta AWS                       |
+| `AWS_REGION`    | Região da AWS                         |
+| `AWS_GIT_ROLE`  | Role da AWS para o Git Actions. Esta role é criada pelo Terraform e pode ser consultada com `terraform output oidc_outputs` |
 
 <BR>
 
