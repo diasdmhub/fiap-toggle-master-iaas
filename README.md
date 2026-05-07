@@ -93,7 +93,7 @@ terraform apply
 > A criação dos recursos pode levar alguns minutos, principalmente por causa do cluster EKS e seus nodes. Ao final, será apresentada uma mensagem indicando o término da implementação seguido dos outputs gerados. Algo similar à mensagem abaixo.
 
 > ```
-> Apply complete! Resources: 69 added, 0 changed, 0 destroyed.
+> Apply complete! Resources: 77 added, 0 changed, 0 destroyed.
 > ```
 
 <BR>

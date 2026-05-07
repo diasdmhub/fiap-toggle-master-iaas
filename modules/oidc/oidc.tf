@@ -19,7 +19,9 @@ resource "aws_iam_role" "git_actions" {
         Condition = {
           StringEquals = {
             "${var.git_domain}:aud" = "sts.amazonaws.com"
-            "${var.git_domain}:sub" = "repo:${var.git_org}/${var.git_repo}:ref:refs/heads/${var.git_branch}"
+          }
+          StringLike = {
+            "${var.git_domain}:sub" = "repo:${var.git_org}/${var.git_repo}:*"
           }
         }
       }
