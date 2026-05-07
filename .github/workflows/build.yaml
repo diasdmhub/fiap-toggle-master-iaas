@@ -156,7 +156,7 @@ jobs:
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           go run . > gorun.log 2>&1 &
           echo "### Resultado do teste unitário: " >> $GITHUB_STEP_SUMMARY
-          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i"; exit 1 } done
+          for i in 1 2; do sleep 2; cat gorun.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i" >> $GITHUB_STEP_SUMMARY; exit 1; } done
 
       - name: Preparação de dependências (Python)
         if: matrix.language == 'python'
@@ -175,7 +175,7 @@ jobs:
           export AWS_REGION="${{ secrets.AWS_REGION }}"
           gunicorn --bind 0.0.0.0:${{ matrix.serv_port }} app:app > gunicorn.log 2>&1 &
           echo "### Resultado do teste unitário: " >> $GITHUB_STEP_SUMMARY
-          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i"; exit 1 } done
+          for i in 1 2; do sleep 2; cat gunicorn.log; curl -fsS "http://localhost:${{ matrix.serv_port }}/health" >> $GITHUB_STEP_SUMMARY && exit 0 || { echo "Health FAIL - $i" >> $GITHUB_STEP_SUMMARY; exit 1; } done
 
       # 5. SCA - Trivy filesystem (bloqueia vulnerabilidade crítica)
       # Fixa as versões do requirements para o Trivy
