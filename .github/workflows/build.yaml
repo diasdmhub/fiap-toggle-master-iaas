@@ -146,9 +146,9 @@ jobs:
         working-directory: ${{ matrix.code_dir }}
         run: |
           export PORT="${{ matrix.serv_port }}"
-          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
           export MASTER_KEY="admin123"
-          export REDIS_URL="redis://redis:6379"
+          export REDIS_URL="redis://localhost:6379"
           export FLAG_SERVICE_URL="http://localhost:8002"
           export TARGETING_SERVICE_URL="http://localhost:8003"
           export SERVICE_API_KEY="SUA_CHAVE_DE_SERVICO"
@@ -167,7 +167,7 @@ jobs:
         working-directory: ${{ matrix.code_dir }}
         run: |
           export PORT="${{ matrix.serv_port }}"
-          export DATABASE_URL="postgres://toggle:toggle@postgres:5432/toggle"
+          export DATABASE_URL="postgres://toggle:toggle@localhost:5432/toggle"
           export AUTH_SERVICE_URL="http://localhost:8001"
           export AWS_SQS_URL="https://sqs.us-east-1.amazonaws.com/123456789012/sua-fila"
           export AWS_DYNAMODB_TABLE="ToggleMasterAnalytics"
