@@ -35,42 +35,42 @@ jobs:
             language: go
             dockerfile: build/Dockerfile-auth
             code_dir: build/auth-service
-            go_version: ${{ env.GO_VERSION }}
+            go_version: stable
             serv_port: 8001
 
           - service: flag
             language: python
             dockerfile: build/Dockerfile-flag
             code_dir: build/flag-service
-            python_version: ${{ env.PYTHON_VERSION }}
+            python_version: "3.14"
             serv_port: 8002
 
           - service: targeting
             language: python
             dockerfile: build/Dockerfile-targeting
             code_dir: build/targeting-service
-            python_version: ${{ env.PYTHON_VERSION }}
+            python_version: "3.14"
             serv_port: 8003
 
           - service: evaluation
             language: go
             dockerfile: build/Dockerfile-evaluation
             code_dir: build/evaluation-service
-            go_version: ${{ env.GO_VERSION }}
+            go_version: stable
             serv_port: 8004
 
           - service: analytics
             language: python
             dockerfile: build/Dockerfile-analytics
             code_dir: build/analytics-service
-            python_version: ${{ env.PYTHON_VERSION }}
+            python_version: "3.14"
             serv_port: 8005
 
     services:
       # PSQL para testes dos microserviços
       postgres:
         image: docker.io/library/postgres:18-alpine
-        container_name: psql
+        # container_name: psql
         env:
           POSTGRES_USER: toggle
           POSTGRES_PASSWORD: toggle
@@ -86,7 +86,7 @@ jobs:
       # Redis para testes dos microserviços
       redis:
         image: docker.io/library/redis:alpine
-        container_name: redis
+        # container_name: redis
         ports:
           - 6379:6379
 
@@ -112,8 +112,8 @@ jobs:
       # 3. Linter / Análise Estática
       - name: Go Lint (golangci-lint)
         if: matrix.language == 'go'
-        env:
-          GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
+        # env:
+        #   GOLANGCI_LINT_CACHE: ~/.cache/golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: "latest"
