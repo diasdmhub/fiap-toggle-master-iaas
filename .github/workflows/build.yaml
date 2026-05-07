@@ -305,41 +305,41 @@ jobs:
           --scanners vuln \
           "${{ matrix.service }}-service:${{ github.sha }}"
 
-      - name: Instalar o AWS CLI
-        run: |
-          curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip -q awscliv2.zip
-          ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+      # - name: Instalar o AWS CLI
+      #   run: |
+      #     curl -sS --connect-timeout 5 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      #     unzip -q awscliv2.zip
+      #     ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 
-      # # Login no AWS ECR
-      # # Não funcional fora do GitHub
-      # - name: Login no AWS ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
-
-      # # OIDC praticamente não funcional fora do GitHub
-      # - name: Configurar credenciais AWS (OIDC)
-      #   id: login-ecr
-      #   uses: aws-actions/configure-aws-credentials@v6
-      #   with:
-      #     role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
-      #     aws-region: ${{ secrets.AWS_REGION }}
-      #     mask-aws-account-id: true
-
-      # Acesso com Access Key para instâncias self-hosted isoladas
-      - name: Configurar credenciais AWS
+      # OIDC praticamente não funcional fora do GitHub
+      - name: Configurar credenciais AWS (OIDC)
+        id: login-ecr
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACC_ID }}:role/${{ secrets.AWS_GIT_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
+          mask-aws-account-id: true
 
-      # Necessário pois a action da aws não parece funcional fora do GitHub
+      # Login no AWS ECR
+      # Não funcional fora do GitHub
       - name: Login no AWS ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-          | docker login --username AWS --password-stdin \
-            ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # # Acesso com Access Key para instâncias self-hosted isoladas
+      # - name: Configurar credenciais AWS
+      #   uses: aws-actions/configure-aws-credentials@v6
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+
+      # # Necessário pois a action da aws não parece funcional fora do GitHub
+      # - name: Login no AWS ECR
+      #   run: |
+      #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+      #     | docker login --username AWS --password-stdin \
+      #       ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
       # 4. Push para o AWS ECR
       - name: Push do microserviço ao ECR
