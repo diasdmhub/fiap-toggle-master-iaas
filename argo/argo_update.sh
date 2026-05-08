@@ -57,5 +57,5 @@ sed -i "/name: auth-secrets/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${NAME_PREFI
 
 sed -i "/name: evaluation-secrets/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${NAME_PREFIX}/service_api_key|" argo/argo_deploy.yaml && \
     echo "Namespace do evaluation-secrets (service_api_key) atualizado"
-sed -i "/remoteRef\/1\/key/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${NAME_PREFIX}/redis_url|" argo/argo_deploy.yaml && \
-    echo "Namespace do evaluation-secrets (service_api_key) atualizado"
+sed -i "/1\/remoteRef\/key/,/value:/ s|^\(\s*\)value:\s*$|\1value: ${NAME_PREFIX}/redis_url|" argo/argo_deploy.yaml && \
+    echo "Namespace do evaluation-secrets (redis_url) atualizado"
