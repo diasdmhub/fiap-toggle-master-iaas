@@ -86,21 +86,21 @@ spec:
             name: db-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
-              path: /spec/data/remoteRef/0/key
+              path: /spec/data/0/remoteRef/key
               value:
         - target:
             kind: ExternalSecret
             name: sqs-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
-              path: /spec/data/remoteRef/0/key
+              path: /spec/data/0/remoteRef/key
               value:
         - target:
             kind: ExternalSecret
             name: auth-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
-              path: /spec/data/remoteRef/0/key
+              path: /spec/data/0/remoteRef/key
               value:
         - target:
             kind: ExternalSecret
