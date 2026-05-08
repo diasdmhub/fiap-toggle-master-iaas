@@ -56,17 +56,17 @@ spec:
           patch: |-
             - op: replace
               path: /data/AWS_REGION
-              value: us-east-1
+              value:
         - target:
             kind: ConfigMap
             name: analytics-config  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
               path: /data/AWS_REGION
-              value: us-east-1
+              value:
             - op: replace
               path: /data/AWS_DYNAMODB_TABLE
-              value: fiap-toggle-dynamo-table
+              value:
 
         # Definição do secret store
         - target:
@@ -75,7 +75,7 @@ spec:
           patch: |-
             - op: replace
               path: /spec/provider/aws/region
-              value: us-east-1
+              value:
             - op: replace
               path: /spec/provider/aws/auth/jwt/serviceAccountRef/name
               value:
@@ -87,31 +87,31 @@ spec:
           patch: |-
             - op: replace
               path: /spec/data/remoteRef/0/key
-              value: fiap-toggle/rds
+              value:
         - target:
             kind: ExternalSecret
             name: sqs-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
               path: /spec/data/remoteRef/0/key
-              value: fiap-toggle/sqs
+              value:
         - target:
             kind: ExternalSecret
             name: auth-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
               path: /spec/data/remoteRef/0/key
-              value: fiap-toggle/master_key
+              value:
         - target:
             kind: ExternalSecret
             name: evaluation-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
               path: /spec/data/remoteRef/0/key
-              value: fiap-toggle/service_api_key
+              value:
             - op: replace
               path: /spec/data/remoteRef/1/key
-              value: fiap-toggle/redis_url
+              value:
 
   destination:
     server: https://kubernetes.default.svc

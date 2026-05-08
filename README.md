@@ -114,7 +114,9 @@ aws eks update-kubeconfig --region $(aws configure get region) --name "$(grep '^
 
 Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais sensíveis só podem ser definidos após a criação da infraestrutura na AWS. Para isso, é utilizado o gerenciador de segredos da AWS (_AWS Secrets Manager_). Alguns valores são extraídos dos outputs do Terraform, outros devem ser definidos manualmente. Eles são considerados sensíveis para evitar a exposição em repositórios públicos.
 
-⚠️ Note que os secrets criados abaixo utilizam o namespace igual ao prefixo do nome dos recursos utilizados no Terraform ("_fiap-toggle_" por padrão). Altere caso utilize outro nome.
+⚠️ Note que os secrets criados abaixo utilizam o _namespace_ igual ao prefixo do nome dos recursos utilizados no Terraform ("_fiap-toggle_" por padrão). Altere caso utilize outro nome.
+
+<BR>
 
 #### MasterKey do microserviço Auth
 
@@ -124,7 +126,7 @@ Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais se
 
 ```bash
 aws secretsmanager create-secret \
-    --name "fiap-toggle/master_key" \
+    --name "$(grep '^name_prefix' terraform.tfvars | cut -d '"' -f 2)/master_key" \
     --description "Chave mestre para o microserviço de autenticação Auth" \
     --secret-string '{"password": "admin123"}'
 ```
@@ -139,7 +141,7 @@ aws secretsmanager create-secret \
 
 ```bash
 aws secretsmanager create-secret \
-    --name "fiap-toggle/service_api_key" \
+    --name "$(grep '^name_prefix' terraform.tfvars | cut -d '"' -f 2)/service_api_key" \
     --description "Chave de serviço para o microserviço Evaluation" \
     --secret-string '{"api_key": "teste"}'
 ```
@@ -148,21 +150,25 @@ aws secretsmanager create-secret \
 
 ## 3. Build da ToggleMaster
 
-Com o **ambiente AWS criado e os repositório ECR disponíveis**, os microserviços da ToggleMaster podem ser enviados ao repositório de imagens ECR. As imagens do microserviços são construídas e enviadas ao repositório de forma automática através de um _Git actions workflow_. Com esse serviço ativo no repositório, **basta submeter um novo "_push_" ou "_pull request_" em qualquer arquivo do diretório `build`**, que workflow é disparada. Alternativamente, principalmente para o primeiro build, **também é possível acionar o workflow manualmente**.
+Com o **ambiente AWS criado e os repositório ECR disponíveis**, os microserviços da ToggleMaster podem ser enviados ao repositório de imagens ECR. As imagens do microserviços são construídas e enviadas ao repositório de forma automática através de um [**Git actions workflow**][gitaction].
 
 <BR>
 
 ### 3.1 Secrets para o build
 
-Antes de executar o workflow, é necessário definir algumas variáveis sensíveis que serão utilizadas nos passos do workflow.
+**Antes de executar o workflow**, é necessário definir algumas variáveis sensíveis que serão utilizadas nos passos do workflow. Essas variáveis são exclusivas para a conexão do GitHub com a AWS. Para isso, deve-se definir os valores abaixo como "**secrets**" no repositório.
 
-Essas variáveis são exclusivas para a conexão do GitHub com a AWS. Para isso, deve-se definir os valores abaixo como "**secrets**" no repositório.
+| Variável       | Descrição       |
+| :------------: | :-------------- |
+| `AWS_ACC_ID`   | ID da conta AWS |
+| `AWS_REGION`   | Região da AWS   |
+| `AWS_GIT_ROLE` | Role da AWS para o Git Actions. _Esta role é criada pelo Terraform e pode ser consultada com `terraform output oidc_outputs`_ |
 
-| Variável        | Descrição                             |
-| :-------------: | :------------------------------------ |
-| `AWS_ACC_ID`    | ID da conta AWS                       |
-| `AWS_REGION`    | Região da AWS                         |
-| `AWS_GIT_ROLE`  | Role da AWS para o Git Actions. Esta role é criada pelo Terraform e pode ser consultada com `terraform output oidc_outputs` |
+<BR>
+
+### 3.2 Push da build
+
+Com o _Git actions_ ativo no repositório, **basta submeter um novo "_push_" ou "_pull request_" em qualquer arquivo dentro do diretório `build`**, que o workflow é disparado. Alternativamente, principalmente para o primeiro build, **também é possível acionar o workflow manualmente**.
 
 <BR>
 
@@ -174,7 +180,7 @@ Esta implementação utiliza o ArgoCD para que a ToggleMaster seja atualizada di
 
 ### 4.1 Interface do ArgoCD
 
-O ArgoCD é configurado por padrão criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de [variáveis do Terraform][tfvars] (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
+O ArgoCD é configurado por padrão para criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de [variáveis do Terraform][tfvars] (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
 
 #### ClusterIP
 
@@ -196,31 +202,33 @@ kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingre
 
 ### 4.2 Senha inicial do ArgoCD
 
-O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` e retorna a senha em texto-claro.
+O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` para moostrar a senha em texto-claro.
 
 ```bash
 kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
+> ⚠️ **Não esqueça de alterar a senha após o primeiro login.**
+
+<BR>
+
 ### 4.3 Registrar o cluster
 
 As credenciais do cluster K8s devem ser registradas no ArgoCD e isso **só é necessário ao utilizar o ArgoCD em um cluster externo.**
 
-> **Estes passos utilizam o [_ArgoCD client_][argocdcli]. Caso esteja utilizando o serviço do tipo ClusterIP, é necessário fazer o _port-forward_ primeiro. Se o serviço for do tipo LoadBalancer, utilize o _endpoint_ criado pelo _cloud provider_.**
+> **Estes passos utilizam o [_ArgoCD client_][argocdcli]. Caso esteja utilizando o serviço do tipo `ClusterIP`, é necessário fazer o _port-forward_ primeiro e utilizar o endpoint local. Se o serviço for do tipo `LoadBalancer`, utilize o _endpoint_ criado pelo _cloud provider_.**
 
 1. Faça o login no ArgoCD pelo terminal.
 
 ```bash
-argocd login [servidor:porta]
+argocd login [endpoint:porta]
 ```
 
-2. Verifique se o ArgoCD está registrado no cluster EKS. Normalmente, essa verificação deve indicar o valor, conforme abaixo.
+2. Verifique se o ArgoCD está registrado no cluster EKS. Normalmente, essa verificação deve indicar a coluna Server como `https://kubernetes.default.svc` e a coluna Name como `in-cluster`.
 
 ```bash
 argocd cluster list
 ```
-
-> **Execute o próximo passo somente se o ArgoCD não se conectar ao cluster EKS corretamente.**
 
 <BR>
 
@@ -228,17 +236,27 @@ argocd cluster list
 
 Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com algumas configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
 
-Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform. O script `argo_update.sh` facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. Alternativamente, também é possível editar manualmente o arquivo de exemplo.
+<BR>
+
+### 4.1 Aplicação personalizada no ArgoCD
+
+Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform. A execução do script `argo_update.sh` facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. _Também é possível editar manualmente o arquivo de exemplo, caso prefira._
 
 ```bash
 ./argo/argo_update.sh
 ```
 
-**O novo arquivo `argo_deploy.yaml` será responsável por definir a sincronização do repositório com o Kubernetes e deve ser aplicado conforme o comando abaixo.**
+<BR>
+
+## 4.2 Inicialização da ToggleMaster com o ArgoCD
+
+O novo arquivo `argo_deploy.yaml` será responsável por definir a aplicação personalizada no ArgoCD e a sincronização do repositório com o Kubernetes. Ele deve ser aplicado com o `kubectl` conforme abaixo.
 
 ```bash
 kubectl apply -f argo/argo_deploy.yaml
 ```
+
+> **Esse arquivo é ignorado no Git e não deve ser publicado.**
 
 <BR>
 
@@ -270,3 +288,4 @@ kubectl apply -f argo/argo_deploy.yaml
 [analyticserv]: https://github.com/FIAP-TCs/analytics-service
 [tfvars]: #11-vari%C3%A1veis-terraform
 [ipalloc]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AvailableIpPerENI.html
+[gitaction]: https://docs.github.com/en/actions/get-started/quickstart
