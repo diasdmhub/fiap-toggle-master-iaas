@@ -50,6 +50,11 @@ output "es_outputs" {
   description = "Outputs do modulo External Secrets (ES)"
 }
 
+output "sa_outputs" {
+  value       = module.sa
+  description = "Outputs do modulo Service Account (SA)"
+}
+
 output "keda_outputs" {
   value       = module.keda
   description = "Outputs do modulo Keda"
