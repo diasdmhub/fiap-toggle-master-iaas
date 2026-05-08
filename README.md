@@ -31,10 +31,10 @@ flowchart LR
 ## 🔑 Prerequisitos
 
 **1.** De preferência, faça um **"_fork_" deste repositório** a fim de possibilitar a execução CI workflow. Ele é utilizado para testar e, principalmente, enviar as imagens dos microserviços ao AWS ECR;
-    - O serviço de **"_Actions_" precisa estar habilitado** no repositório.
+> **O serviço de **"_Actions_" precisa estar habilitado** no repositório.**
 
-**2.** Copie o código-fonte do repositório para um ambiente de execução/desenvolvimento local. Recomenda-se **clonar o repositório com o Git**:
-    - `git clone https://github.com/SUA_CONTA/FORK_DO_REPO.git && cd FORK_DO_REPO`
+**2.** Copie todo o código-fonte do repositório para um ambiente de execução/desenvolvimento local. Recomenda-se **clonar o repositório com o Git**:
+> **`git clone https://github.com/SUA_CONTA/FORK_DO_REPO.git && cd FORK_DO_REPO`**
 
 **3.** O ambiente de execução/desenvolvimento local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli], pois ele é utilizado em algumas configurações mais adiante;
 
@@ -42,7 +42,7 @@ flowchart LR
 
 **5.** O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
 
-**6.** _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado para auxiliar as configurações da ToggleMaster no cluster. No roteiro de implementação, são oferecidos alguns scripts que utilizam ele.
+**6.** _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado no ambiente local para auxiliar as configurações da ToggleMaster no cluster. No roteiro de implementação, são oferecidos alguns exemplos que utilizam ele. No entanto, também é possível sincronizar os manifestos da ToggleMaster diretamente na interface do ArgoCD.
 
 <BR>
 
