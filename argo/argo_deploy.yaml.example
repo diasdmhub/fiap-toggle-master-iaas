@@ -107,10 +107,10 @@ spec:
             name: evaluation-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
           patch: |-
             - op: replace
-              path: /spec/data/remoteRef/0/key
+              path: /spec/data/0/remoteRef/key
               value:
             - op: replace
-              path: /spec/data/remoteRef/1/key
+              path: /spec/data/1/remoteRef/key
               value:
 
   destination:
