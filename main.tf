@@ -118,6 +118,7 @@ module "keda" {
   cluster_endpoint = module.eks.eks_cluster_endpoint
   cluster_ca       = module.eks.eks_cluster_ca
   cluster_name     = module.eks.eks_cluster_name
+  role_arn         = module.sa.role_arn
 
   depends_on = [module.eks]
 }

@@ -18,7 +18,7 @@ resource "helm_release" "keda" {
     },
     {
       name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-      value = module.sa.role_arn
+      value = var.role_arn
     }
   ]
 

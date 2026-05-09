@@ -23,3 +23,8 @@ variable "cluster_name" {
   description = "Nome do cluster EKS"
   type        = string
 }
+
+variable "role_arn" {
+  description = "IAM Role ARN para anotação IRSA do Keda"
+  type        = string
+}
