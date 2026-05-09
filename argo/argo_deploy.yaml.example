@@ -6,112 +6,135 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/account/repo  # ATUALIZE A URL DO SEU REPOSITÓRIO
+    repoURL: https://github.com/account/repo  # ATUALIZE COM A URL DO SEU REPOSITÓRIO
     targetRevision: HEAD
     path: kube
 
     kustomize:
       patches:
+        # -----------------------------------------------------------------------
+        # SYNC-WAVE ORDERING
+        # A cadeia de dependências é:
+        #   wave -4 │ Namespace
+        #   wave -3 │ ClusterSecretStore   (005-secret-store.yaml)
+        #   wave -2 │ ExternalSecret       (010-secrets-db.yaml)
+        #   wave -1 │ Job db-init          (011-db-init.yaml, wave no manifesto)
+        #   wave  0 │ todos os demais recursos (padrão)
+        # -----------------------------------------------------------------------
+
+        # Namespace - wave mais baixo para existir antes de tudo
+        - target:
+            kind: Namespace
+          patch: |-
+            - op: add
+              path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+              value: "-4"
         # Definição das imagens
         - target:
             kind: Deployment
-            name: auth-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: auth-service
           patch: |-
             - op: replace
               path: /spec/template/spec/containers/0/image
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: Deployment
-            name: flag-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: flag-service
           patch: |-
             - op: replace
               path: /spec/template/spec/containers/0/image
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: Deployment
-            name: targeting-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: targeting-service
           patch: |-
             - op: replace
               path: /spec/template/spec/containers/0/image
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: Deployment
-            name: evaluation-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: evaluation-service
           patch: |-
             - op: replace
               path: /spec/template/spec/containers/0/image
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: Deployment
-            name: analytics-service  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: analytics-service
           patch: |-
             - op: replace
               path: /spec/template/spec/containers/0/image
-              value:
+              value:  # ATUALIZE ESTE CAMPO
 
         # Definição dos configmaps
         - target:
             kind: ConfigMap
-            name: evaluation-config  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: evaluation-config
           patch: |-
             - op: replace
               path: /data/AWS_REGION
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: ConfigMap
-            name: analytics-config  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: analytics-config
           patch: |-
             - op: replace
               path: /data/AWS_REGION
-              value:
+              value:  # ATUALIZE ESTE CAMPO
             - op: replace
               path: /data/AWS_DYNAMODB_TABLE
-              value:
+              value:  # ATUALIZE ESTE CAMPO
 
         # Definição do secret store
         - target:
             kind: ClusterSecretStore
-            name: aws-secrets-manager  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: aws-secrets-manager
           patch: |-
+            - op: add
+              path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+              value: "-3"
             - op: replace
               path: /spec/provider/aws/region
-              value:
+              value:  # ATUALIZE ESTE CAMPO
             - op: replace
               path: /spec/provider/aws/auth/jwt/serviceAccountRef/name
-              value:
+              value:  # ATUALIZE ESTE CAMPO
 
         # Definição do namespace dos secrets
         - target:
             kind: ExternalSecret
-            name: db-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: db-secrets
           patch: |-
             - op: replace
               path: /spec/data/0/remoteRef/key
-              value:
+              value:  # ATUALIZE ESTE CAMPO
+            - op: add
+              path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+              value: "-2"
         - target:
             kind: ExternalSecret
-            name: sqs-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: sqs-secrets
           patch: |-
             - op: replace
               path: /spec/data/0/remoteRef/key
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: ExternalSecret
-            name: auth-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: auth-secrets
           patch: |-
             - op: replace
               path: /spec/data/0/remoteRef/key
-              value:
+              value:  # ATUALIZE ESTE CAMPO
         - target:
             kind: ExternalSecret
-            name: evaluation-secrets  # ATUALIZE O CAMPO "VALUE" ABAIXO
+            name: evaluation-secrets
           patch: |-
             - op: replace
               path: /spec/data/0/remoteRef/key
-              value:
+              value:  # ATUALIZE ESTE CAMPO
             - op: replace
               path: /spec/data/1/remoteRef/key
-              value:
+              value:  # ATUALIZE ESTE CAMPO
 
   destination:
     server: https://kubernetes.default.svc

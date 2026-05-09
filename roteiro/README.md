@@ -4,7 +4,7 @@ Para a implementação inicial, alguns dados precisam ser configurados para perm
 
 <BR>
 
-### 1 Variáveis Terraform
+## 1 Variáveis Terraform
 
 O arquivo de [variáveis do Terraform][tfvars] (`terraform.tfvars`) deve ser definido com as principais variáveis do ambiente. É disponibilizado um arquivo de exemplo (`terraform.tfvars.example`) com alguns valores pré-definidos, mas é **altamente recomendado que as variáveis abaixo sejam definidas de acordo com o ambiente**.
 
