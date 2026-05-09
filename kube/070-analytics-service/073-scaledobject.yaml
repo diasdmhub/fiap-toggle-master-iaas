@@ -41,6 +41,8 @@ spec:
 # Threshold de 1 mensagem ativa os pods
       activationQueueLength: "1"
 
+---
+
 # RBAC para o KEDA criar TokenRequests com SAs em outros namespaces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
