@@ -38,6 +38,28 @@ data "aws_iam_policy_document" "irsa_trust" {
       values   = ["sts.amazonaws.com"]
     }
   }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_url}:sub"
+      values   = [
+        "system:serviceaccount:keda:keda-operator",
+        "system:serviceaccount:keda:keda-metrics-server",
+      ]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_url}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_iam_role" "this" {
