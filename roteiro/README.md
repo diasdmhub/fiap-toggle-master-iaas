@@ -73,8 +73,6 @@ Considerando a arquitetura atual do sistema ToggleMaster, algumas credenciais se
 
 ⚠️ Note que os secrets criados abaixo utilizam o _namespace_ igual ao prefixo do nome dos recursos utilizados no Terraform ("_fiap-toggle_" por padrão). Altere caso utilize outro nome.
 
-<BR>
-
 #### MasterKey do microserviço Auth
 
 É necessário definir uma chave "mestre" para o microserviço de autenticação Auth.
@@ -88,11 +86,9 @@ aws secretsmanager create-secret \
     --secret-string '{"password": "admin123"}'
 ```
 
-<BR>
-
 #### Token do microserviço Evaluation
 
-É necessário definir um _token_ para o microserviço Evaluation. No entanto, só é possível gerar essa chave após a inicialização do microserviço Auth.
+É necessário definir um _token_ para o microserviço Evaluation. No entanto, só é possível gerar essa chave após a inicialização do microserviço Auth. Neste primeiro momento basta criar o secret com um valor aleatório.
 
 > **Altere o valor de exemplo _`teste`_ para algo mais complexo e seguro.**
 
@@ -135,13 +131,13 @@ Esta implementação utiliza o ArgoCD para que a ToggleMaster seja atualizada di
 
 <BR>
 
-### 4.1 Interface do ArgoCD
+### 4.1 (_Opcional_) Interface do ArgoCD
 
 O ArgoCD é configurado por padrão para criar um serviço do tipo "_`ClusterIP`_" no K8s, a fim de evitar exposições desnecessárias e custos extras. No entanto, é possível alterar essa configuração no arquivo de [variáveis do Terraform][tfvars] (_`terraform.tfvars`_). Basta alterar de _`ClusterIP`_ para _`LoadBalancer`_.
 
 #### ClusterIP
 
-Com o serviço do tipo `ClusterIP`, pode-se acessar a interface do ArgoCD utilizando o `port-forward` do Kubernetes, como no exemplo abaixo.
+Com o serviço do tipo `ClusterIP`, pode-se acessar a interface do ArgoCD utilizando o `port-forward` do Kubernetes, como no exemplo abaixo. Depois, a interface estará acessível no navegador com o endpoint do ambiente local e na porta encaminhada (`8080`).
 
 ```bash
 kubectl port-forward service/argocd-server -n argocd --address 0.0.0.0 8080:443
@@ -149,7 +145,7 @@ kubectl port-forward service/argocd-server -n argocd --address 0.0.0.0 8080:443
 
 #### LoadBalancer
 
-Caso tenha configurado o serviço como `LoadBalancer`, o _cloud provider_ disponibilizará um _endpoint_ público para acesso à interface. Pode-se obter o _endpoint_ com o comando abaixo.
+Caso tenha configurado o serviço como `LoadBalancer`, o _cloud provider_ disponibilizará um _endpoint_ público para acesso à interface. Pode-se obter o _endpoint_ com o comando abaixo. Depois, a interface estará acessível no navegador com o endpoint público da AWS.
 
 ```bash
 kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
@@ -159,7 +155,7 @@ kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingre
 
 ### 4.2 Senha inicial do ArgoCD
 
-O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` para moostrar a senha em texto-claro.
+O usuário padrão do ArgoCD é `admin`, mas a senha é aleatória. A senha inicial do ArgoCD é gerada automaticamente e salva no _secret_ do K8s chamado `argocd-initial-admin-secret`. O comando abaixo utiliza o `kubectl` para mostrar a senha em texto-claro.
 
 ```bash
 kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
@@ -169,35 +165,23 @@ kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 <BR>
 
-### 4.3 Registrar o cluster
+### 4.3 (_Opcional_) Registrar o cluster
 
-As credenciais do cluster K8s devem ser registradas no ArgoCD e isso **só é necessário ao utilizar o ArgoCD em um cluster externo.**
-
-> **Estes passos utilizam o [_ArgoCD client_][argocdcli]. Caso esteja utilizando o serviço do tipo `ClusterIP`, é necessário fazer o _port-forward_ primeiro e utilizar o endpoint local. Se o serviço for do tipo `LoadBalancer`, utilize o _endpoint_ criado pelo _cloud provider_.**
-
-1. Faça o login no ArgoCD pelo terminal.
-
-```bash
-argocd login [endpoint:porta]
-```
-
-2. Verifique se o ArgoCD está registrado no cluster EKS. Normalmente, essa verificação deve indicar a coluna Server como `https://kubernetes.default.svc` e a coluna Name como `in-cluster`.
-
-```bash
-argocd cluster list
-```
+As credenciais do cluster K8s devem ser registradas no ArgoCD e isso **só é necessário ao utilizar o ArgoCD em um cluster externo.** Se necessário, siga os passos oficiais da [documentação do ArgoCD][argodoc] para registrar o cluster.
 
 <BR>
 
 ## 5. Configuração ToggleMaster
 
-Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com algumas configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
+Com os serviços da AWS criados, o Terraform disponibilizará _outputs_ com algumas configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, sendo URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
 
 <BR>
 
 ### 5.1 Aplicação personalizada no ArgoCD
 
-Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform. A execução do script `argo_update.sh` facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. _Também é possível editar manualmente o arquivo de exemplo, caso prefira._
+Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform.
+
+O script `argo_update.sh` está disponível no mesmo diretório. Ele facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. _Também é possível editar manualmente o arquivo de exemplo, caso prefira._
 
 ```bash
 ./argo/argo_update.sh
@@ -207,7 +191,9 @@ Esses valores podem ser aplicados na definição do ArgoCD que aplicará a Toggl
 
 ## 5.2 Inicialização da ToggleMaster com o ArgoCD
 
-O novo arquivo `argo_deploy.yaml` será responsável por definir a aplicação personalizada no ArgoCD e a sincronização do repositório com o Kubernetes. Ele deve ser aplicado com o `kubectl` conforme abaixo.
+> É possível incluir a aplicação ToggleMaster diretamente pela interface do ArgoCD. Para isso, é necessário acessar a interface conforme descrito acima.
+
+Se optar por utilizar o manifesto `argo_deploy.yaml`, ele será responsável por definir a aplicação personalizada no ArgoCD e a sincronização do repositório com o Kubernetes. Ele deve ser aplicado com o `kubectl` conforme abaixo.
 
 ```bash
 kubectl apply -f argo/argo_deploy.yaml
@@ -221,3 +207,4 @@ kubectl apply -f argo/argo_deploy.yaml
 [tfvars]: #11-vari%C3%A1veis-terraform
 [gitaction]: https://docs.github.com/en/actions/get-started/quickstart
 [runflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
+[argodoc]: https://argo-cd.readthedocs.io/en/stable/getting_started/
