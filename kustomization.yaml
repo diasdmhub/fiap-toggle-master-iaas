@@ -28,6 +28,8 @@ configMapGenerator:
     namespace: toggle
     options:
       disableNameSuffixHash: true
+      annotations:
+        argocd.argoproj.io/sync-wave: "-2"
     files:
       - auth-init.sql=build/auth-service/db/init.sql
       - flag-init.sql=build/flag-service/db/init.sql
