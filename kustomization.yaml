@@ -29,6 +29,6 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
-      - auth-init.sql=/build/auth-service/db/init.sql
-      - flag-init.sql=/build/flag-service/db/init.sql
-      - targeting-init.sql=/build/targeting-service/db/init.sql
+      - auth-init.sql=build/auth-service/db/init.sql
+      - flag-init.sql=build/flag-service/db/init.sql
+      - targeting-init.sql=build/targeting-service/db/init.sql
