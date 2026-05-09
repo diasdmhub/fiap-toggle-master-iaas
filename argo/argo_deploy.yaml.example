@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/account/repo  # ATUALIZE COM A URL DO SEU REPOSITÓRIO
     targetRevision: HEAD
-    path: kube
+    path: .
 
     kustomize:
       patches:

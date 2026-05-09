@@ -26,6 +26,14 @@ flowchart LR
     B -->|Terraform| C(K8s)
 ```
 
+Além disso, o aspecto organizacional deste repositório é intencional. A separação de diretórios tem uma coerência:
+
+- `_raiz_` - infraestrutura (_Terraform_) e configurações do repositório
+- `kube/` - manifestos Kubernetes, autocontidos e portáveis
+- `argo/` - definições de deploy com o ArgoCD
+
+A intenção é manter os arquivos contidos em diretórios próprios preservar a separação de responsabilidades, e permitindo relativa portabilidade de repositórios ou ambientes. 
+
 <BR>
 
 ## 🔑 Prerequisitos

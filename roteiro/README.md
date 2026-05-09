@@ -125,7 +125,7 @@ Com o **ambiente AWS criado e os repositório ECR disponíveis**, os microservi�
 
 ### 3.2 Push da build
 
-Com o _Git actions_ ativo no repositório, **basta submeter um novo "_push_" ou "_pull request_" em qualquer arquivo dentro do diretório `build`**, que o workflow é disparado. Alternativamente, principalmente para o primeiro build, **também é possível acionar o workflow manualmente**.
+Com o _Git actions_ ativo no repositório, **basta submeter um novo "_push_" ou "_pull request_" em qualquer arquivo dentro do diretório `build`**, que o workflow é disparado. Alternativamente, principalmente para o primeiro build, **também é possível [acionar o workflow manualmente][runflow]**.
 
 <BR>
 
@@ -189,13 +189,13 @@ argocd cluster list
 
 <BR>
 
-## 4. Configuração ToggleMaster
+## 5. Configuração ToggleMaster
 
 Após criar os recursos da AWS, o Terraform disponibilizará _outputs_ com algumas configurações que serão utilizadas pelo sistema ToggleMaster. É necessário definir essas configurações como variáveis para a ToggleMaster, como URLs de repositórios ECR, Elasticache Valkey, RDS e SQS.
 
 <BR>
 
-### 4.1 Aplicação personalizada no ArgoCD
+### 5.1 Aplicação personalizada no ArgoCD
 
 Esses valores podem ser aplicados na definição do ArgoCD que aplicará a ToggleMaster no cluster EKS. Para isso, é disponibilizado o arquivo `argo_deploy.yaml.example` no diretório `argo` deste repositório. Nele devem ser incluídos os valores corretos que serão aplicados no ambiente, conforme os outputs gerados pelo Terraform. A execução do script `argo_update.sh` facilita o preenchimento dos valores corretos fazendo uma cópia do exemplo já com os valores preenchidos. _Também é possível editar manualmente o arquivo de exemplo, caso prefira._
 
@@ -205,7 +205,7 @@ Esses valores podem ser aplicados na definição do ArgoCD que aplicará a Toggl
 
 <BR>
 
-## 4.2 Inicialização da ToggleMaster com o ArgoCD
+## 5.2 Inicialização da ToggleMaster com o ArgoCD
 
 O novo arquivo `argo_deploy.yaml` será responsável por definir a aplicação personalizada no ArgoCD e a sincronização do repositório com o Kubernetes. Ele deve ser aplicado com o `kubectl` conforme abaixo.
 
@@ -220,3 +220,4 @@ kubectl apply -f argo/argo_deploy.yaml
 [argocdcli]: https://argo-cd.readthedocs.io/en/stable/cli_installation/
 [tfvars]: #11-vari%C3%A1veis-terraform
 [gitaction]: https://docs.github.com/en/actions/get-started/quickstart
+[runflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
