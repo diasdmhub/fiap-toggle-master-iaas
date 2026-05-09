@@ -20,26 +20,6 @@ Com o ambiente AWS criado, os microserviços, então, são executados em um clus
 
 De forma simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
 
-<!--
-```mermaid
-flowchart TD
-    A["Repositório"]
-    B["Build"]
-    subgraph AWS
-        ECR
-        subgraph EKS
-            ArgoCD
-            C["ToggleMaster"]
-        end
-    end
-    A - ->|1 Terraform| AWS
-    A - ->|2 Actions| B
-    B - ->|3 Envia| ECR
-    ArgoCD - ->|4 Sincroniza| A
-    ArgoCD - ->|5 Kustomiza| C
-```
--->
-
 ```mermaid
 flowchart LR
     %% Styles
