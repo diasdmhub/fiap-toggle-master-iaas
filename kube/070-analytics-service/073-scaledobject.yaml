@@ -6,6 +6,7 @@ metadata:
 spec:
   podIdentity:
     provider: aws
+    identityOwner: workload   # O KEDA assume a identidade do SA do workload
 
 ---
 

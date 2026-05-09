@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "irsa_trust" {
     condition {
       test     = "StringEquals"
       variable = "${local.oidc_url}:sub"
-      values   = ["system:serviceaccounts:${var.namespace}:${local.service_account_name}"]
+      values   = ["system:serviceaccount:${var.namespace}:${local.service_account_name}"]
     }
 
     condition {
