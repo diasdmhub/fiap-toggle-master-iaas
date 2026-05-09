@@ -30,15 +30,15 @@ flowchart LR
 
 ## 🔑 Prerequisitos
 
-**1.** De preferência, faça um **"_fork_" deste repositório** a fim de possibilitar a execução CI workflow. Ele é utilizado para testar e, principalmente, enviar as imagens dos microserviços ao AWS ECR;
-> **O serviço de **"_Actions_" precisa estar habilitado** no repositório.**
+**1.** De preferência, faça um **"_fork_" deste repositório** a fim de possibilitar a execução do CI workflow. Ele é utilizado para testar e, principalmente, para enviar as imagens dos microserviços ao AWS ECR;
+> **O serviço de `Actions` do repositório precisa estar habilitado no repositório.**
 
 **2.** Copie todo o código-fonte do repositório para um ambiente de execução/desenvolvimento local. Recomenda-se **clonar o repositório com o Git**:
 > **`git clone https://github.com/SUA_CONTA/FORK_DO_REPO.git && cd FORK_DO_REPO`**
 
 **3.** O ambiente de execução/desenvolvimento local deve estar **autenticado na AWS** com o [**AWS CLI**][awscli], pois ele é utilizado em algumas configurações mais adiante;
 
-**4.** É necessário [**instalar o Terraform**][terraform] para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster;
+**4.** É necessário [**instalar o Terraform**][terraform] no ambiente de execução/desenvolvimento local para implementar os serviços da AWS que serão utilizados pelo sistema ToggleMaster;
 
 **5.** O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
 

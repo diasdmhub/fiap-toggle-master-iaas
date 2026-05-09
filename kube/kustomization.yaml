@@ -5,6 +5,7 @@ resources:
   - 000-namespace.yaml
   - 005-secret-store.yaml
   - 010-secrets-db.yaml
+  - 011-db-init.yaml
   - 020-secrets-sqs.yaml
   - 030-auth-service/031-configmap.yaml
   - 030-auth-service/032-secrets.yaml
@@ -19,3 +20,14 @@ resources:
   - 070-analytics-service/071-configmap.yaml
   - 070-analytics-service/072-deployment.yaml
   - 070-analytics-service/073-scaledobject.yaml
+
+# Gera o ConfigMap com os scripts SQL no diretório build
+configMapGenerator:
+  - name: db-init-sql
+    namespace: toggle
+    options:
+      disableNameSuffixHash: true
+    files:
+      - auth-init.sql=../build/auth-service/db/init.sql
+      - flag-init.sql=../build/flag-service/db/init.sql
+      - targeting-init.sql=../build/targeting-service/db/init.sql
