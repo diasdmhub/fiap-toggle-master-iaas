@@ -20,23 +20,60 @@ Com o ambiente AWS criado, os microserviços, então, são executados em um clus
 
 De forma simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
 
+<!--
 ```mermaid
 flowchart TD
     A["Repositório"]
     B["Build"]
-    C["Kustomize"]
-    E["ToggleMaster"]
     subgraph AWS
         ECR
         subgraph EKS
             ArgoCD
+            C["ToggleMaster"]
         end
     end
-    A -->|1 Terraform| AWS
-    A -->|2 Actions| B
-    B -->|3 Envia| ECR
-    ArgoCD -->|4 Sincroniza| A
-    ArgoCD -->|5 Kustomiza| E
+    A - ->|1 Terraform| AWS
+    A - ->|2 Actions| B
+    B - ->|3 Envia| ECR
+    ArgoCD - ->|4 Sincroniza| A
+    ArgoCD - ->|5 Kustomiza| C
+```
+-->
+
+```mermaid
+flowchart LR
+    %% Styles
+    classDef repo fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1
+    classDef ci fill:#FFF3E0,stroke:#FB8C00,color:#E65100
+    classDef aws fill:#F3E5F5,stroke:#8E24AA,color:#4A148C
+    classDef deploy fill:#E8F5E9,stroke:#43A047,color:#1B5E20
+
+    %% Source
+    A["📦 Repositório"]:::repo
+
+    %% CI/CD
+    B["⚙️ Build / GitHub Actions"]:::ci
+
+    %% AWS Area
+    subgraph AWS["☁️ AWS"]
+        direction TB
+
+        ECR["🗂️ ECR"]:::aws
+
+        subgraph EKS["🚢 EKS"]
+            direction LR
+
+            ArgoCD["🔄 ArgoCD"]:::deploy
+            C["🎛️ ToggleMaster"]:::deploy
+        end
+    end
+
+    %% Flow
+    A -->|"1. Terraform"| AWS
+    A -->|"2. Actions"| B
+    B -->|"3. Push Image"| ECR
+    ArgoCD -->|"4. Sync Manifests"| A
+    ArgoCD -->|"5. Deploy / Kustomize"| C
 ```
 
 Além disso, o aspecto organizacional deste repositório é intencional. A separação de diretórios tem uma coerência:
