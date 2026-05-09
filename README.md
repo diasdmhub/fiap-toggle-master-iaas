@@ -21,18 +21,32 @@ Com o ambiente AWS criado, os microserviços, então, são executados em um clus
 De forma simplificada, este é o fluxo geral de implementação do sistema ToggleMaster:
 
 ```mermaid
-flowchart LR
-    A(Build) -->|Git Actions| B(AWS)
-    B -->|Terraform| C(K8s)
+flowchart TD
+    A["Repositório"]
+    B["Build"]
+    C["Kustomize"]
+    E["ToggleMaster"]
+    subgraph AWS
+        ECR
+        subgraph EKS
+            ArgoCD
+        end
+    end
+    A -->|1 Terraform| AWS
+    A -->|2 Actions| B
+    B -->|3 Envia| ECR
+    ArgoCD -->|4 Sincroniza| A
+    ArgoCD -->|5 Kustomiza| E
 ```
 
 Além disso, o aspecto organizacional deste repositório é intencional. A separação de diretórios tem uma coerência:
 
-- `_raiz_` - infraestrutura (_Terraform_) e configurações do repositório
-- `kube/` - manifestos Kubernetes, autocontidos e portáveis
-- `argo/` - definições de deploy com o ArgoCD
+- _`root`_ - infraestrutura (_Terraform_) e configurações do repositório
+- `kube` - manifestos Kubernetes, autocontidos e portáveis
+- `argo` - definições de deploy com o ArgoCD
+- `build` - código-fonte dos microserviços da ToggleMaster
 
-A intenção é manter os arquivos contidos em diretórios próprios preservar a separação de responsabilidades, e permitindo relativa portabilidade de repositórios ou ambientes. 
+A intenção é manter os arquivos contidos em diretórios próprios, preservar a separação de responsabilidades e permitir relativa portabilidade ambientes. 
 
 <BR>
 
@@ -50,7 +64,7 @@ A intenção é manter os arquivos contidos em diretórios próprios preservar a
 
 **5.** O **`kubectl`** é necessário para gerenciar o cluster Kubernetes e seus recursos. Recomenda-se instalá-lo utilizando o [**repositório oficial do Kubernetes**][kuberepo];
 
-**6.** _(Opcional)_ O [cliente ArgoCD CLI][argocdcli] pode ser instalado no ambiente local para auxiliar as configurações da ToggleMaster no cluster. No roteiro de implementação, são oferecidos alguns exemplos que utilizam ele. No entanto, também é possível sincronizar os manifestos da ToggleMaster diretamente na interface do ArgoCD.
+**6.** _(Opcional)_ O [**cliente ArgoCD CLI**][argocdcli] pode ser instalado no ambiente local para auxiliar as configurações da ToggleMaster no cluster. No roteiro de implementação, são oferecidos alguns exemplos que utilizam ele. No entanto, também é possível sincronizar os manifestos da ToggleMaster diretamente na interface do ArgoCD.
 
 <BR>
 
@@ -64,13 +78,13 @@ A intenção é manter os arquivos contidos em diretórios próprios preservar a
 
 ## 📝 Considerações
 
-🔶 A depender do ambiente de repositórios Git utilizado na criação do CI workflow, podem haver diferenças ou limitações nas ações. São oferecidos _workflows_ para o **Gitea** e para o **GitHub**.  No entanto, o workflow possui muita flexibilidade para diferentes cenários.
+🔶 A depender do ambiente de repositórios Git utilizado na criação do CI workflow, podem haver diferenças ou limitações nas ações. São oferecidos _workflows_ para o **Gitea** e para o **GitHub**.  No entanto, workflows possui muita flexibilidade para diferentes cenários.
 
-🔶 A autenticação na AWS pode ser realizada com o OpenID Connect (OIDC). No entanto, devido à relação de certificados e restrições em portas de serviços, o uso de secrets pode ser necessário para ambientes de CI fora do GitHub, como ambientes self-hosted. Por exemplo, foi necessário utilizar o AWS CLI em alguns passos do workflow do Gitea para evitar variáveis e suposições específicas do GitHub em ações pré-definidas;
+🔶 A autenticação do Git Action na AWS pode ser realizada com o OpenID Connect (OIDC). No entanto, devido à relação de certificados e restrições em portas de serviços, o uso de secrets pode ser necessário para ambientes de CI fora do GitHub, como ambientes self-hosted. Por exemplo, foi necessário utilizar o AWS CLI em alguns passos do workflow do Gitea para evitar variáveis e suposições específicas do GitHub em ações pré-definidas;
 
 🔶 É possível realizar o teste de verificação de vulnerabilidades das imagens dos microserviços diretamente na AWS, no entanto, podem haver custos implícitos.
 
-🔶 Considerando que um dos objetivos desta implementação é atualizar os microserviços automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
+🔶 Considerando que um dos objetivos desta implementação é atualizar os microserviços no cluster K8s automaticamente com o ArgoCD, não há necessidade de atualizar o valor da tag das imagens construídas no manifesto de deployment dos microserviços, haja vista que o ArgoCD pode detectar a tag mais recente do _registry_.
 
 🔶 Devido ao volume de serviços implementados no cluster EKS, considerando serviços como o Keda, Helm, ArgoCD, External Secrets, o próprio cluster, e a ToggleMaster, a quantidade de pods pode ser um pouco elevada, principalmente se houver escalonamento de pods. No Kubernetes, cada pod recebe um endereço IP privado. Portanto, é necessário definir uma instância EC2 da AWS que permita um número maior de [alocações de IPs por interface][ipalloc]. Neste projeto, foi utilizada a instância `m7i-flex.large` que é elegível como "_free tier_" e permite até 10 alocações de IPs.
 
