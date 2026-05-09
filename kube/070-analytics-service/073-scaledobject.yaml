@@ -5,7 +5,7 @@ metadata:
   namespace: toggle
 spec:
   podIdentity:
-    provider: aws-eks
+    provider: aws
 
 ---
 
