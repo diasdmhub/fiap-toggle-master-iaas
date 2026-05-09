@@ -13,9 +13,9 @@ spec:
     kustomize:
       patches:
         # -----------------------------------------------------------------------
-        # SYNC-WAVE ORDERING
+        # ORDEM SYNC-WAVE
         # A cadeia de dependências é:
-        #   wave -4 │ Namespace
+        #   wave -4 | Namespace
         #   wave -3 │ ClusterSecretStore   (005-secret-store.yaml)
         #   wave -2 │ ExternalSecret       (010-secrets-db.yaml)
         #   wave -1 │ Job db-init          (011-db-init.yaml, wave no manifesto)
@@ -90,15 +90,15 @@ spec:
             kind: ClusterSecretStore
             name: aws-secrets-manager
           patch: |-
-            - op: add
-              path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-              value: "-3"
             - op: replace
               path: /spec/provider/aws/region
               value:  # ATUALIZE ESTE CAMPO
             - op: replace
               path: /spec/provider/aws/auth/jwt/serviceAccountRef/name
               value:  # ATUALIZE ESTE CAMPO
+            - op: add
+              path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+              value: "-3"
 
         # Definição do namespace dos secrets
         - target:

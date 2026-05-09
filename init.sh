@@ -19,6 +19,10 @@ if (( ${#missing[@]} )); then
     exit 1
 fi
 
+# 1.1 Verifica se o arquivo de variáveis do Terraform existe
+
+[ -e ./terraform.tfvars ] || { printf ' Arquivo "terraform.tfvars" indisponível. Defina ele primeiro.\n'; exit 1; }
+
 # 2. Criação do S3 bucket com idempotencia - ignora se já existir
 
 # 2.1 Cria S3 bucket
