@@ -76,6 +76,8 @@ flowchart LR
     ArgoCD -->|"5. Deploy / Kustomize"| C
 ```
 
+<BR>
+
 Além disso, o aspecto organizacional deste repositório é intencional. A separação de diretórios tem uma coerência:
 
 - _`root`_ - infraestrutura (_Terraform_) e configurações do repositório
