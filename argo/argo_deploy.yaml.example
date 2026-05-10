@@ -11,6 +11,19 @@ spec:
     path: .
 
     kustomize:
+      # Definição das imagens
+      images:
+        - name: toggle/auth-service
+          newName:
+        - name: toggle/flag-service
+          newName:
+        - name: toggle/targeting-service
+          newName:
+        - name: toggle/evaluation-service
+          newName:
+        - name: toggle/analytics-service
+          newName:
+
       patches:
         # -----------------------------------------------------------------------
         # ORDEM SYNC-WAVE
@@ -29,7 +42,7 @@ spec:
             - op: add
               path: /metadata/annotations/argocd.argoproj.io~1sync-wave
               value: "-4"
-        # Definição das imagens
+
         - target:
             kind: Deployment
             name: auth-service

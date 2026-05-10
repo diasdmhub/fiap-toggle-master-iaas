@@ -21,6 +21,18 @@ resources:
   - kube/070-analytics-service/072-deployment.yaml
   - kube/070-analytics-service/073-scaledobject.yaml
 
+images:
+  - name: toggle/auth-service
+    newTag: latest
+  - name: toggle/flag-service
+    newTag: latest
+  - name: toggle/targeting-service
+    newTag: latest
+  - name: toggle/evaluation-service
+    newTag: latest
+  - name: toggle/analytics-service
+    newTag: latest
+
 # Gera o ConfigMap com os scripts SQL no diretório build
 # ConfigMap personalizado para evitar cópias extras da inicialização das tabelas de BD
 configMapGenerator:

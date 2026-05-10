@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: auth
-        image: __ECR_REPO__/auth-service:latest
+        image: toggle/auth-service
         ports:
         - containerPort: 8001
 

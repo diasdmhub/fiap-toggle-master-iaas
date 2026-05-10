@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: analytics
-        image: __ECR_REPO__/analytics-service:latest
+        image: toggle/analytics-service
         ports:
         - containerPort: 8005
 
