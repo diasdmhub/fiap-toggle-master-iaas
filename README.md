@@ -113,6 +113,8 @@ A intenção é manter os arquivos contidos em diretórios próprios, preservar 
 
 🔶 A automação proposta para este ambiente é de elevada complexidade e pode exigir manutenção especializada. Ela é muito útil para explorar diversos recursos computacionais de _cloud providers_, e recursos de aplicações amplamente utilizadas no mercado tecnológico. Todavia, sua implementação não parece justificar o custo operacional.
 
+🔶 Atualizar a image
+
 [fase2]: https://github.com/diasdmhub/fiap-toggle-master-microservices
 [awscli]: https://aws.amazon.com/cli/
 [terraform]: https://developer.hashicorp.com/terraform/install

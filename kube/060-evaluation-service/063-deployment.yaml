@@ -23,7 +23,7 @@ spec:
       serviceAccountName: fiap-toggle-serv-acc
       containers:
       - name: evaluation
-        image: __ECR_REPO__/evaluation-service:latest
+        image: toggle/evaluation-service
         ports:
         - containerPort: 8004
 

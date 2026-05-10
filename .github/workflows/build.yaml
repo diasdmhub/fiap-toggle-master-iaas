@@ -334,6 +334,43 @@ jobs:
             docker push ${{ env.REGISTRY }}/${{ matrix.ecr_repo }}:latest
           fi
 
+  push-update-tag:
+    name: Update das tags pelo Kustomize
+    runs-on: ubuntu-latest
+    needs: build  # Executa somente após os builds
+    permissions:
+      contents: write
+
+    steps:
+      # 1. Checkout
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Instalar kustomize
+        run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+  
+      - name: Atualizar tags no kustomization.yaml
+        env:
+          REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          NEW_TAG="v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+          
+          for svc in auth flag targeting evaluation analytics; do
+            ./kustomize edit set image \
+              toggle/${svc}-service=${{ env.REGISTRY }}/toggle/${svc}-service:${NEW_TAG}
+          done
+  
+      - name: Commit e push das novas tags
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kustomization.yaml
+          git commit -m "chore: bump image tags para v${{ env.TAG_VERSION }}-${SHORT_SHA}"
+          git push
+
       # - name: Atualizar o manifesto de deployment
       #   env:
       #     REGISTRY: ${{ secrets.AWS_ACC_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com

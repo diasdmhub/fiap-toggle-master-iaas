@@ -88,9 +88,9 @@ aws secretsmanager create-secret \
 
 #### Token do microserviço Evaluation
 
-É necessário definir um _token_ para o microserviço Evaluation. No entanto, só é possível gerar essa chave após a inicialização do microserviço Auth. Neste primeiro momento basta criar o secret com um valor aleatório.
+É necessário definir um _token_ para o microserviço Evaluation. No entanto, só é possível gerar essa chave após a inicialização do microserviço Auth. Neste primeiro momento basta criar o secret com um valor aleatório. Isso é necesário para evitar falha na inicialização dos microserviços.
 
-> **Altere o valor de exemplo _`teste`_ para algo mais complexo e seguro.**
+> **Este _secret_ será atualizado mais adiante.**
 
 ```bash
 aws secretsmanager create-secret \
@@ -189,9 +189,9 @@ O script `argo_update.sh` está disponível no mesmo diretório. Ele facilita o 
 
 <BR>
 
-## 5.2 Inicialização da ToggleMaster com o ArgoCD
+### 5.2 Inicialização da ToggleMaster com o ArgoCD
 
-> É possível incluir a aplicação ToggleMaster diretamente pela interface do ArgoCD. Para isso, é necessário acessar a interface conforme descrito acima.
+> **É possível incluir a aplicação ToggleMaster diretamente pela interface do ArgoCD. Para isso, é necessário acessar a interface conforme descrito acima.**
 
 Se optar por utilizar o manifesto `argo_deploy.yaml`, ele será responsável por definir a aplicação personalizada no ArgoCD e a sincronização do repositório com o Kubernetes. Ele deve ser aplicado com o `kubectl` conforme abaixo.
 
@@ -200,6 +200,113 @@ kubectl apply -f argo/argo_deploy.yaml
 ```
 
 > **Esse arquivo é ignorado no Git e não deve ser publicado.**
+
+<BR>
+
+## 6. Validação
+
+Nesta etapa, o sistema ToggleMaster deve estar ativo e pronto para receber mensagens. Para validar seu funcionamento, é necessário criar uma chave de autenticação com o microserviço `auth-service`, uma "feature flag" com o microserviço `flag-service` e uma regra de segmentação com o microserviço `targeting-service`.
+
+<BR>
+
+#### 4.1 Consulte os IPs dos serviços no cluster com o `kubectl`, conforme indicado abaixo. O resultado deve ser algo similar a seguir.
+
+```bash
+$ kubectl get service -n toggle
+NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                               PORT(S)          AGE
+analytics    ClusterIP      172.20.201.49    <none>                                    8005/TCP         86m
+auth         ClusterIP      172.20.90.88     <none>                                    8001/TCP         86m
+evaluation   LoadBalancer   172.20.86.71     abc614f-123.us-east-1.elb.amazonaws.com   8004:30891/TCP   86m
+flag         ClusterIP      172.20.114.165   <none>                                    8002/TCP         86m
+targeting    ClusterIP      172.20.93.183    <none>                                    8003/TCP         86m
+```
+
+#### 4.2 Crie uma flag e sua regra de segmentação com os comandos a seguir.
+
+O script abaixo demonstra a criação da feature-flag interna e a definição de uma regra de segmentação para a flag. **Pode-se executar o bloco de comandos diretamente no terminal.**
+
+> ⚠️ **Para criar um token, a flag e a segmentação, é necessário acessar os microserviços internos. Pode ser utilizado o _port-fowarding_ para isso.**
+
+```bash
+# Master key do microserviço de autenticação
+NAME_PREFIX="$(grep '^name_prefix' terraform.tfvars | cut -d '"' -f 2)"
+AWS_REGION="$(aws configure get region)"
+MASTER_KEY=$(aws secretsmanager get-secret-value \
+    --secret-id "$NAME_PREFIX/master_key" \
+    --region "$AWS_REGION" \
+    --query 'SecretString' \
+    --output text 2>&1 | jq -r '.password' 2>&1)
+if [ $? -ne 0 ]; then
+    echo "⚠ Erro ao recuperar o secret"
+    exit 1
+fi
+
+# Port-fowarding dos microserviços internos
+kubectl port-forward service/auth -n toggle --address 0.0.0.0 8001:8001 &
+kubectl port-forward service/flag -n toggle --address 0.0.0.0 8002:8002 &
+kubectl port-forward service/targeting -n toggle --address 0.0.0.0 8003:8003 &
+sleep 5
+
+# Criar chave de autenticação
+FLAG_TOKEN=$(curl -X POST http://localhost:8001/admin/keys \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $MASTER_KEY" \
+    -d '{"name": "toggle-flag"}' | sed -n 's/.*"key":"\([^"]*\)".*/\1/p')
+
+# Atualizar o secret com o novo token
+aws secretsmanager update-secret \
+    --secret-id "$NAME_PREFIX/service_api_key" \
+    --secret-string "{\"api_key\": \"$FLAG_TOKEN\"}" \
+    --region "$AWS_REGION"
+
+# Atualizar o secret no Kubernetes
+kubectl annotate externalsecret evaluation-secrets \
+    force-sync=$(date +%s) \
+    --overwrite -n toggle
+kubectl get externalsecret evaluation-secrets -n toggle
+kubectl rollout restart deployment/evaluation-service -n toggle
+sleep 5
+
+# Criar feature flag com a chave 
+curl -X POST http://localhost:8002/flags \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $FLAG_TOKEN" \
+    -d '{
+            "name": "enable-feature",
+            "description": "Ativa o novo recurso para os usuários",
+            "is_enabled": true
+        }'
+
+# Criar uma regra de segmentação
+curl -X POST http://localhost:8003/rules \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $FLAG_TOKEN" \
+    -d '{
+            "flag_name": "enable-feature",
+            "is_enabled": true,
+            "rules": {
+                "type": "PERCENTAGE",
+                "value": 50
+            }
+        }'
+
+# Finalizar os jobs em background
+kill $(jobs -p)
+```
+
+#### **4.2** Envie mensagens para o ToggleMaster.
+
+Neste teste, são enviadas algumas mensagens, as quais são enfileiradas no SQS. O `analytics-service` processa as mensagens e as envia para a tabela do DynamoDB. Nesse momento, é possível observar tanto o enfileiramento de mensagens no SQS quanto sua gravação no DynamoDB. Utilize o console da AWS para observar isso.
+
+Na interface do ArgoCD também é possível observar o escalonamento de pods do `analytics-service` à medida que novas mensagens são enfileiradas.
+
+    > ⚠️ **Este teste envia muitas mensagens ao ToggleMaster e pode levar um tempo, pois o serviço precisa se comunicar com a AWS. Se preferir, basta reduzir o número de mensagens enviadas para acelerar o processo.**
+
+```bash
+for i in $(seq 1000); do { curl "http://abc614f-123.us-east-1.elb.amazonaws.com:8004/evaluate?user_id=teste-$i&flag_name=enable-feature" ; } done
+```
+
+- Opcionalmente, é possível observar as mensagens sendo processadas no log do `analytics-service`.
 
 [init]: ./init.sh
 [helm]: https://helm.sh/docs/intro/install
