@@ -43,42 +43,6 @@ spec:
               path: /metadata/annotations/argocd.argoproj.io~1sync-wave
               value: "-4"
 
-        - target:
-            kind: Deployment
-            name: auth-service
-          patch: |-
-            - op: replace
-              path: /spec/template/spec/containers/0/image
-              value:  # ATUALIZE ESTE CAMPO
-        - target:
-            kind: Deployment
-            name: flag-service
-          patch: |-
-            - op: replace
-              path: /spec/template/spec/containers/0/image
-              value:  # ATUALIZE ESTE CAMPO
-        - target:
-            kind: Deployment
-            name: targeting-service
-          patch: |-
-            - op: replace
-              path: /spec/template/spec/containers/0/image
-              value:  # ATUALIZE ESTE CAMPO
-        - target:
-            kind: Deployment
-            name: evaluation-service
-          patch: |-
-            - op: replace
-              path: /spec/template/spec/containers/0/image
-              value:  # ATUALIZE ESTE CAMPO
-        - target:
-            kind: Deployment
-            name: analytics-service
-          patch: |-
-            - op: replace
-              path: /spec/template/spec/containers/0/image
-              value:  # ATUALIZE ESTE CAMPO
-
         # Definição dos configmaps
         - target:
             kind: ConfigMap
