@@ -235,14 +235,13 @@ O script `eval_token.sh` facilita a criação de um token para o `evaluation-ser
 
 Neste teste, algumas mensagens são enviadas e enfileiradas no SQS. O `analytics-service` processa as mensagens e as envia para a tabela do DynamoDB. Nesse momento, é possível observar tanto o enfileiramento de mensagens no SQS quanto sua gravação no DynamoDB. Use o console da AWS para observar isso.
 
-Na interface do ArgoCD, também é possível observar o escalonamento de pods do `analytics-service` à medida que novas mensagens são enfileiradas.
+Na interface do ArgoCD, também é possível observar o escalonamento de pods do `analytics-service` à medida que novas mensagens são enfileiradas. Opcionalmente, é possível observar as mensagens sendo processadas no log do pod do `analytics-service`.
 
 ```bash
 for i in $(seq 1000); do { curl "http://abc614f-123.us-east-1.elb.amazonaws.com:8004/evaluate?user_id=teste-$i&flag_name=enable-feature" ; } done
 ```
 
 > ⚠️ **Esse comando envia muitas mensagens ao ToggleMaster, portanto pode levar um tempo, pois o serviço precisa se comunicar com a AWS. Se preferir, basta reduzir o número de mensagens enviadas para acelerar o processo.**
-> Opcionalmente, é possível observar as mensagens sendo processadas no log do pod do `analytics-service`.
 
 [init]: ./init.sh
 [helm]: https://helm.sh/docs/intro/install
