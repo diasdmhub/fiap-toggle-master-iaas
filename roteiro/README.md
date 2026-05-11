@@ -221,6 +221,8 @@ flag         ClusterIP      172.20.114.165   <none>                             
 targeting    ClusterIP      172.20.93.183    <none>                                    8003/TCP         86m
 ```
 
+<BR>
+
 #### 6.2 Crie uma flag e sua regra de segmentação.
 
 O script `eval_token.sh` facilita a criação de um token para o `evaluation-service`, a criação de uma _feature flag_ e sua regra de segmentação. Também atualiza o token e reinicializa o deployment do `evaluation-service` para que ele leia o novo secret.
@@ -230,6 +232,8 @@ O script `eval_token.sh` facilita a criação de um token para o `evaluation-ser
 ```
 
 > Para criar o token, a flag e a segmentação, é necessário acessar os microserviços internos. O script utiliza o _port-fowarding_ para isso.
+
+<BR>
 
 #### 6.3 Envie mensagens para o ToggleMaster.
 
@@ -243,10 +247,10 @@ for i in $(seq 1000); do { curl "http://abc614f-123.us-east-1.elb.amazonaws.com:
 
 > ⚠️ **Esse comando envia muitas mensagens ao ToggleMaster, portanto pode levar um tempo, pois o serviço precisa se comunicar com a AWS. Se preferir, basta reduzir o número de mensagens enviadas para acelerar o processo.**
 
-[init]: ./init.sh
+[init]: /init.sh
 [helm]: https://helm.sh/docs/intro/install
 [argocdcli]: https://argo-cd.readthedocs.io/en/stable/cli_installation/
-[tfvars]: #11-vari%C3%A1veis-terraform
+[tfvars]: /terraform.tfvars.example
 [gitaction]: https://docs.github.com/en/actions/get-started/quickstart
 [runflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
 [argodoc]: https://argo-cd.readthedocs.io/en/stable/getting_started/
