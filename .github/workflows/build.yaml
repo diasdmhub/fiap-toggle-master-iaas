@@ -335,7 +335,7 @@ jobs:
           fi
 
   push-update-tag:
-    name: Update das tags pelo Kustomize
+    name: Update das tags no Kustomize
     runs-on: ubuntu-latest
     needs: build  # Executa somente após os builds
     permissions:
