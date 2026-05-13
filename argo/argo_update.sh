@@ -28,7 +28,7 @@ sed -i -E "s|^(\s+)repoURL: .*|\1repoURL: $(git config --get remote.origin.url)|
 
 for serv in "auth" "flag" "targeting" "evaluation" "analytics"; do
     SERVICE=$(terraform output -json ecr_outputs | jq -r .ecr_repository_urls.$serv)
-    sed -i "/toggle\/${serv}-service/,/newName:/ s|^\(\s*\)newName:.*$|\1newName: ${SERVICE}|" argo/argo_deploy.yaml && \
+    sed -i "s|^\(\s*\)- toggle\/${serv}-service=.*$|\1- toggle\/${serv}-service=${SERVICE}|" argo/argo_deploy.yaml && \
     echo "URL do $serv-service atualizada"
 done
 

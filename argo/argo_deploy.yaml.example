@@ -13,16 +13,11 @@ spec:
     kustomize:
       # Definição das imagens
       images:
-        - name: toggle/auth-service
-          newName:
-        - name: toggle/flag-service
-          newName:
-        - name: toggle/targeting-service
-          newName:
-        - name: toggle/evaluation-service
-          newName:
-        - name: toggle/analytics-service
-          newName:
+        - toggle/auth-service=
+        - toggle/flag-service=
+        - toggle/targeting-service=
+        - toggle/evaluation-service=
+        - toggle/analytics-service=
 
       patches:
         # -----------------------------------------------------------------------
